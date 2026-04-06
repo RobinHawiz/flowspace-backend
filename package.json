@@ -7,7 +7,8 @@
     "build": "tsc",
     "postbuild": "tsc-alias",
     "start": "node dist/server.js",
-    "gen-secret-key": "tsx generateSecretKey.ts"
+    "gen-secret-key": "tsx generateSecretKey.ts",
+    "install-db": "tsx installDb.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
