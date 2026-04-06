@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "useDefineForClassFields": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
+    "rootDir": "./src",
+    "outDir": "dist",
+
+    /* Aliases */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@config/*": ["./src/config/*"],
+      "@models/*": ["./src/models/*"],
+      "@schemas/*": ["./src/schemas/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@errors/*": ["./src/errors/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@controllers/*": ["./src/controllers/*"],
+      "@services/*": ["./src/services/*"],
+      "@repositories/*": ["./src/repositories/*"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}
