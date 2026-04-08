@@ -6,10 +6,11 @@ import verifyDbConnection from "@config/verifyDbConnection.js";
 dotenv.config();
 
 try {
-  setupDI();
-  await verifyDbConnection();
+  const app = await build();
+  setupDI(app.log);
+  await verifyDbConnection(app.diContainer.cradle.pool);
+  app.diContainer.cradle.authRoutes.initRoutes(app);
 
-  const app = build();
   const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
   await app.listen({
