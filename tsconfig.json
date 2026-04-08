@@ -10,7 +10,6 @@
 
     /* Aliases */
     "paths": {
-      "@/*": ["./src/*"],
       "@utils/*": ["./src/utils/*"],
       "@config/*": ["./src/config/*"],
       "@models/*": ["./src/models/*"],
@@ -20,7 +19,8 @@
       "@routes/*": ["./src/routes/*"],
       "@controllers/*": ["./src/controllers/*"],
       "@services/*": ["./src/services/*"],
-      "@repositories/*": ["./src/repositories/*"]
+      "@repositories/*": ["./src/repositories/*"],
+      "@/*": ["./src/*"]
     },
 
     /* Linting */
