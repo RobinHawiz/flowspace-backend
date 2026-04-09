@@ -13,6 +13,7 @@ import {
   UnauthorizedError,
 } from "@errors/appError.js";
 import { AppUserRepository } from "@repositories/appUser.js";
+import { AuthTokenResponse } from "@models/auth.js";
 
 export interface AuthService {
   /**
@@ -20,7 +21,7 @@ export interface AuthService {
    *
    * @throws UnauthorizedError if the email or password is incorrect.
    */
-  loginUser(payload: AppUserCredentials): Promise<string>;
+  loginUser(payload: AppUserCredentials): Promise<AuthTokenResponse>;
   /**
    * Retrieves the current authenticated app user.
    *
@@ -61,7 +62,7 @@ export class DefaultAuthService implements AuthService {
     const token: string = jwt.sign({ id: user.id }, key, {
       expiresIn: "1h",
     });
-    return token;
+    return { token };
   }
 
   async getAppUser(id: number) {
