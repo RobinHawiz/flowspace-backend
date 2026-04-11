@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@fastify/awilix": "^8.2.0",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "awilix": "^12.1.0",
     "bcrypt": "^6.0.0",

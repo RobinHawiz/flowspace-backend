@@ -39,6 +39,11 @@ export class DefaultAuthRoutes implements AuthRoutes {
       },
     );
 
+    // Logs out the current app user by clearing the token cookie.
+    app.post("/api/auth/logout", async (request, reply) => {
+      await this.authController.logoutAppUser(request, reply);
+    });
+
     // Creates an app user after validating the request body.
     app.post<{ Body: AppUserRegistration }>(
       "/api/auth/register",

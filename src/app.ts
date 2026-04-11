@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { fastifyAwilixPlugin } from "@fastify/awilix";
 import cors from "@fastify/cors";
+import cookie from "@fastify/cookie";
 import { AppError } from "@errors/appError.js";
 import { SchemaValidationError } from "@errors/schemaValidationError.js";
 
@@ -9,11 +10,22 @@ export default async function build() {
 
   await app.register(cors, {
     origin: process.env.CORS_ORIGINS ?? "*",
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     exposedHeaders: ["Location"],
   });
 
   await app.register(fastifyAwilixPlugin, { disposeOnClose: true });
+
+  await app.register(cookie, {
+    parseOptions: {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      signed: false,
+    },
+  });
 
   app.setSchemaErrorFormatter(function (errors, dataVar) {
     return new SchemaValidationError(errors[0], dataVar);

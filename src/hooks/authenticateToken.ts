@@ -20,23 +20,19 @@ function isAuthTokenPayload(
 }
 
 /**
- * Verifies the bearer token for protected routes and attaches the decoded JWT payload to `request.user`.
+ * Verifies the auth cookie for protected routes and attaches the
+ * decoded JWT payload to `request.user`.
  *
- * @throws `UnauthorizedError` if no token is provided.
- * @throws `ForbiddenError` if the token is invalid.
+ * @throws `UnauthorizedError` if no auth token is provided.
+ * @throws `ForbiddenError` if the auth token is invalid.
  */
 export default async function authenticateToken(
   request: FastifyRequest,
   _reply: FastifyReply,
 ) {
-  const authHeader = request.headers.authorization;
-  if (!authHeader) {
-    throw new UnauthorizedError("Missing bearer token.");
-  }
-
-  const [type, token] = authHeader.split(" ");
-  if (!token || type !== "Bearer") {
-    throw new UnauthorizedError("Missing bearer token.");
+  const token = request.cookies.token;
+  if (!token) {
+    throw new UnauthorizedError("Missing auth token.");
   }
 
   try {
@@ -50,13 +46,13 @@ export default async function authenticateToken(
     if (isAuthTokenPayload(decoded)) {
       request.user = decoded;
     } else {
-      throw new ForbiddenError("Invalid token payload.");
+      throw new ForbiddenError("Invalid auth token.");
     }
   } catch (err) {
     // Preserve specific AppError messages from earlier validation.
     if (err instanceof AppError) {
       throw err;
     }
-    throw new ForbiddenError("Invalid token.");
+    throw new ForbiddenError("Invalid auth token.");
   }
 }

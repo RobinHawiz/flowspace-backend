@@ -7,6 +7,7 @@ export interface AuthController {
     request: FastifyRequest<{ Body: AppUserCredentials }>,
     reply: FastifyReply,
   ): Promise<void>;
+  logoutAppUser(request: FastifyRequest, reply: FastifyReply): Promise<void>;
   getAppUser(request: FastifyRequest, reply: FastifyReply): Promise<void>;
   insertAppUser(
     request: FastifyRequest<{ Body: AppUserRegistration }>,
@@ -22,7 +23,13 @@ export class DefaultAuthController implements AuthController {
     reply: FastifyReply,
   ) {
     const token = await this.authService.loginUser(request.body);
-    reply.code(200).send(token);
+    reply.setCookie("token", token);
+    reply.code(200).send({ success: true });
+  }
+
+  async logoutAppUser(_: FastifyRequest, reply: FastifyReply) {
+    reply.clearCookie("token");
+    reply.code(200).send({ success: true });
   }
 
   async getAppUser(request: FastifyRequest, reply: FastifyReply) {
