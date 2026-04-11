@@ -2,7 +2,6 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import {
   AppError,
-  ForbiddenError,
   InternalServerError,
   UnauthorizedError,
 } from "@/errors/appError.js";
@@ -28,7 +27,7 @@ function isAuthTokenPayload(
  */
 export default async function authenticateToken(
   request: FastifyRequest,
-  _reply: FastifyReply,
+  reply: FastifyReply,
 ) {
   const token = request.cookies.token;
   if (!token) {
@@ -46,13 +45,19 @@ export default async function authenticateToken(
     if (isAuthTokenPayload(decoded)) {
       request.user = decoded;
     } else {
-      throw new ForbiddenError("Invalid auth token.");
+      reply.clearCookie("token");
+      throw new UnauthorizedError("Invalid auth token.");
     }
   } catch (err) {
     // Preserve specific AppError messages from earlier validation.
     if (err instanceof AppError) {
       throw err;
+    } else if (err instanceof jwt.TokenExpiredError) {
+      reply.clearCookie("token");
+      throw new UnauthorizedError("Token has expired.");
+    } else {
+      reply.clearCookie("token");
+      throw new UnauthorizedError("Invalid auth token.");
     }
-    throw new ForbiddenError("Invalid auth token.");
   }
 }
