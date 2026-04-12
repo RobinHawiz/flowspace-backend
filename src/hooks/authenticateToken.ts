@@ -1,10 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import {
-  AppError,
-  InternalServerError,
-  UnauthorizedError,
-} from "@/errors/appError.js";
+import { AppError, UnauthorizedError } from "@/errors/appError.js";
 import { AuthTokenPayload } from "@models/auth.js";
 
 function isAuthTokenPayload(
@@ -35,12 +31,7 @@ export default async function authenticateToken(
   }
 
   try {
-    const key = process.env.JWT_SECRET_KEY;
-    if (!key) {
-      throw new InternalServerError(
-        "Missing JWT_SECRET_KEY environment variable.",
-      );
-    }
+    const key = process.env.JWT_SECRET_KEY!;
     const decoded = jwt.verify(token, key);
     if (isAuthTokenPayload(decoded)) {
       request.user = decoded;

@@ -9,7 +9,7 @@ export default async function build() {
   const app = Fastify({ logger: true });
 
   await app.register(cors, {
-    origin: process.env.CORS_ORIGINS ?? "*",
+    origin: process.env.CORS_ORIGINS,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     exposedHeaders: ["Location"],
