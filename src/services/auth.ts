@@ -39,13 +39,13 @@ export class DefaultAuthService implements AuthService {
   constructor(private readonly appUserRepo: AppUserRepository) {}
 
   async loginUser(payload: AppUserCredentials) {
-    const user = await this.appUserRepo.findByEmail(payload.email);
-    if (!user) {
+    const appUser = await this.appUserRepo.findByEmail(payload.email);
+    if (!appUser) {
       throw new UnauthorizedError(`Email or password is incorrect`);
     }
     const passwordMatch = await bcrypt.compare(
       payload.password,
-      user.passwordHash,
+      appUser.passwordHash,
     );
     if (!passwordMatch) {
       throw new UnauthorizedError(`Email or password is incorrect`);
@@ -58,7 +58,7 @@ export class DefaultAuthService implements AuthService {
       );
     }
     // Create JWT
-    const token: string = jwt.sign({ id: user.id }, key, {
+    const token: string = jwt.sign({ id: appUser.id }, key, {
       expiresIn: "1h",
     });
     return token;
@@ -73,21 +73,21 @@ export class DefaultAuthService implements AuthService {
   }
 
   async insertAppUser(payload: AppUserRegistration) {
-    const user = await this.appUserRepo.findByEmail(payload.email);
-    if (user) {
+    const appUser = await this.appUserRepo.findByEmail(payload.email);
+    if (appUser) {
       throw new ConflictError(`App user already exists`);
     }
 
     const { firstName, lastName, email, password } = payload;
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const newUser: AppUserInsert = {
+    const newAppUser: AppUserInsert = {
       firstName,
       lastName,
       email,
       passwordHash,
     };
 
-    return this.appUserRepo.insertAppUser(newUser);
+    return this.appUserRepo.insertAppUser(newAppUser);
   }
 }
