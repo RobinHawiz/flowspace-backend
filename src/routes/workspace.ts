@@ -20,5 +20,18 @@ export class DefaultWorkspaceRoutes implements WorkspaceRoutes {
         await this.workspaceController.getWorkspaces(request, reply);
       },
     );
+
+    // Fetches the current user's workspace.
+    app.get<{
+      Params: { workspaceId: string };
+    }>(
+      "/api/workspaces/:workspaceId",
+      {
+        onRequest: authenticateToken,
+      },
+      async (request, reply) => {
+        await this.workspaceController.getWorkspace(request, reply);
+      },
+    );
   }
 }
