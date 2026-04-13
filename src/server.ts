@@ -10,6 +10,7 @@ try {
   setupDI(app.log);
   await verifyDbConnection(app.diContainer.cradle.pool);
   app.diContainer.cradle.authRoutes.initRoutes(app);
+  app.diContainer.cradle.workspaceRoutes.initRoutes(app);
 
   const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
