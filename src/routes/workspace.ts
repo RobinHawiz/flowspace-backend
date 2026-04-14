@@ -49,5 +49,22 @@ export class DefaultWorkspaceRoutes implements WorkspaceRoutes {
         await this.workspaceController.createWorkspace(request, reply);
       },
     );
+
+    // Update workspace title.
+    app.patch<{
+      Params: { workspaceId: string };
+      Body: { title: string };
+    }>(
+      "/api/workspaces/:workspaceId",
+      {
+        onRequest: authenticateToken,
+        schema: {
+          body: workspaceCreationSchema,
+        },
+      },
+      async (request, reply) => {
+        await this.workspaceController.updateWorkspaceTitle(request, reply);
+      },
+    );
   }
 }

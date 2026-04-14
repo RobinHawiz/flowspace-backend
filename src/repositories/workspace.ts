@@ -32,12 +32,18 @@ export interface WorkspaceRepository {
   /**
    * Creates a workspace and assigns the current app user to it with an admin role.
    *
-   * @throws InternalServerError If there is an error during database retrieval.
+   * @throws InternalServerError If there is an error during database operation.
    */
   createWorkspace(
     app_user_id: number,
     payload: WorkspaceCreation,
   ): Promise<WorkspaceEntity>;
+  /**
+   * Updates the title of a workspace.
+   *
+   * @throws InternalServerError If there is an error during database update.
+   */
+  updateWorkspaceTitle(workspace_id: string, title: string): Promise<void>;
 }
 
 export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
@@ -123,6 +129,19 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
       throw new InternalServerError(`Database workspace insertion error.`);
     } finally {
       client.release();
+    }
+  }
+
+  async updateWorkspaceTitle(workspace_id: string, title: string) {
+    const sql: QueryConfig = {
+      text: `update workspace set title = $1 where id = $2`,
+      values: [title, workspace_id],
+    };
+    try {
+      await this.pool.query(sql);
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace update error.`);
     }
   }
 }

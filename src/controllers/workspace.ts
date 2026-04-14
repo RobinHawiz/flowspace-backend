@@ -12,6 +12,13 @@ export interface WorkspaceController {
     request: FastifyRequest<{ Body: WorkspaceCreation }>,
     reply: FastifyReply,
   ): Promise<void>;
+  updateWorkspaceTitle(
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Body: { title: string };
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
 }
 
 export class DefaultWorkspaceController implements WorkspaceController {
@@ -44,5 +51,21 @@ export class DefaultWorkspaceController implements WorkspaceController {
       request.body,
     );
     reply.code(201).send(workspace);
+  }
+
+  async updateWorkspaceTitle(
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Body: { title: string };
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.workspaceService.updateWorkspaceTitle(
+      request.user.id,
+      request.params.workspaceId,
+      request.body.title,
+    );
+
+    reply.code(204).send();
   }
 }
