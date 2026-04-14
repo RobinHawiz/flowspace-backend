@@ -44,6 +44,12 @@ export interface WorkspaceRepository {
    * @throws InternalServerError If there is an error during database update.
    */
   updateWorkspaceTitle(workspace_id: string, title: string): Promise<void>;
+  /**
+   * Deletes a workspace.
+   *
+   * @throws InternalServerError If there is an error during database deletion.
+   */
+  deleteWorkspace(workspace_id: string): Promise<void>;
 }
 
 export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
@@ -142,6 +148,19 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace update error.`);
+    }
+  }
+
+  async deleteWorkspace(workspace_id: string) {
+    const sql: QueryConfig = {
+      text: `delete from workspace where id = $1`,
+      values: [workspace_id],
+    };
+    try {
+      await this.pool.query(sql);
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace deletion error.`);
     }
   }
 }

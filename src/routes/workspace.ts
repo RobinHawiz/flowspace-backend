@@ -66,5 +66,18 @@ export class DefaultWorkspaceRoutes implements WorkspaceRoutes {
         await this.workspaceController.updateWorkspaceTitle(request, reply);
       },
     );
+
+    // Delete workspace.
+    app.delete<{
+      Params: { workspaceId: string };
+    }>(
+      "/api/workspaces/:workspaceId",
+      {
+        onRequest: authenticateToken,
+      },
+      async (request, reply) => {
+        await this.workspaceController.deleteWorkspace(request, reply);
+      },
+    );
   }
 }
