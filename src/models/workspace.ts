@@ -6,3 +6,8 @@ export type WorkspaceEntity = {
 
 // Incoming payload for workspace creation.
 export type WorkspaceCreation = Pick<WorkspaceEntity, "title">;
+
+// Workspace data returned in responses.
+export type WorkspaceResponse = Pick<WorkspaceEntity, "id" | "title"> & {
+  role: "admin" | "member";
+};

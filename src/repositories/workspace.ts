@@ -1,7 +1,11 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
 import { InternalServerError } from "@errors/appError.js";
-import { WorkspaceCreation, WorkspaceEntity } from "@models/workspace.js";
+import {
+  WorkspaceCreation,
+  WorkspaceEntity,
+  WorkspaceResponse,
+} from "@models/workspace.js";
 
 export interface WorkspaceRepository {
   /**
@@ -9,7 +13,7 @@ export interface WorkspaceRepository {
    *
    * @throws InternalServerError If there is an error during database retrieval.
    */
-  findWorkspaces(id: number): Promise<Array<WorkspaceEntity>>;
+  findWorkspaces(id: number): Promise<Array<WorkspaceResponse>>;
   /**
    * Checks if a workspace with the given ID exists.
    *
@@ -24,7 +28,7 @@ export interface WorkspaceRepository {
   findCurrentAppUserWorkspace(
     app_user_id: number,
     workspace_id: string,
-  ): Promise<WorkspaceEntity | undefined>;
+  ): Promise<WorkspaceResponse | undefined>;
   /**
    * Creates a workspace and assigns the current app user to it with an admin role.
    *
@@ -44,17 +48,14 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
 
   async findWorkspaces(app_user_id: number) {
     const sql: QueryConfig = {
-      text: `select w.id, w.title
+      text: `select w.id, w.title, awu.role
             from workspace w
-            where w.id in (
-              select awu.workspace_id
-              from assigned_workspace_user awu
-              where awu.app_user_id = $1
-            )`,
+            inner join assigned_workspace_user awu on awu.workspace_id = w.id
+            where awu.app_user_id = $1`,
       values: [app_user_id],
     };
     try {
-      return (await this.pool.query<WorkspaceEntity>(sql)).rows;
+      return (await this.pool.query<WorkspaceResponse>(sql)).rows;
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace lookup error.`);
@@ -76,17 +77,14 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
 
   async findCurrentAppUserWorkspace(app_user_id: number, workspace_id: string) {
     const sql: QueryConfig = {
-      text: `select w.id, w.title
+      text: `select w.id, w.title, awu.role
             from workspace w
-            where w.id = $1 and w.id in (
-              select awu.workspace_id
-              from assigned_workspace_user awu
-              where awu.app_user_id = $2
-            )`,
+            inner join assigned_workspace_user awu on awu.workspace_id = w.id
+            where w.id = $1 and awu.app_user_id = $2`,
       values: [workspace_id, app_user_id],
     };
     try {
-      return (await this.pool.query<WorkspaceEntity>(sql)).rows[0];
+      return (await this.pool.query<WorkspaceResponse>(sql)).rows[0];
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace lookup error.`);
@@ -114,7 +112,11 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
       sqlAssignWorkspace.values![0] = workspace.id;
       await client.query(sqlAssignWorkspace);
       await client.query("COMMIT");
-      return workspace;
+      const output: WorkspaceResponse = {
+        ...workspace,
+        role: "admin",
+      };
+      return output;
     } catch (err) {
       await client.query("ROLLBACK");
       this.logger.error(err);
