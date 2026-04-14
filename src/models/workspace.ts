@@ -3,3 +3,6 @@ export type WorkspaceEntity = {
   id: number;
   title: string;
 };
+
+// Incoming payload for workspace creation.
+export type WorkspaceCreation = Pick<WorkspaceEntity, "title">;

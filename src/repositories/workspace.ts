@@ -1,7 +1,7 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
 import { InternalServerError } from "@errors/appError.js";
-import { WorkspaceEntity } from "@models/workspace.js";
+import { WorkspaceCreation, WorkspaceEntity } from "@models/workspace.js";
 
 export interface WorkspaceRepository {
   /**
@@ -25,6 +25,15 @@ export interface WorkspaceRepository {
     app_user_id: number,
     workspace_id: string,
   ): Promise<WorkspaceEntity | undefined>;
+  /**
+   * Creates a workspace and assigns the current app user to it with an admin role.
+   *
+   * @throws InternalServerError If there is an error during database retrieval.
+   */
+  createWorkspace(
+    app_user_id: number,
+    payload: WorkspaceCreation,
+  ): Promise<WorkspaceEntity>;
 }
 
 export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
@@ -81,6 +90,37 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace lookup error.`);
+    }
+  }
+
+  async createWorkspace(app_user_id: number, payload: WorkspaceCreation) {
+    const client = await this.pool.connect();
+    await client.query("BEGIN");
+    const sqlCreateWorkspace: QueryConfig = {
+      text: `insert into workspace (title)
+            values ($1::text)
+            returning id, title`,
+      values: [payload.title],
+    };
+    const sqlAssignWorkspace: QueryConfig = {
+      text: `insert into assigned_workspace_user (workspace_id, app_user_id, role)
+            values ($1, $2, 'admin')`,
+      values: [0, app_user_id],
+    };
+    try {
+      const workspace = (
+        await client.query<WorkspaceEntity>(sqlCreateWorkspace)
+      ).rows[0];
+      sqlAssignWorkspace.values![0] = workspace.id;
+      await client.query(sqlAssignWorkspace);
+      await client.query("COMMIT");
+      return workspace;
+    } catch (err) {
+      await client.query("ROLLBACK");
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace insertion error.`);
+    } finally {
+      client.release();
     }
   }
 }

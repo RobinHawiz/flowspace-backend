@@ -1,10 +1,15 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { WorkspaceService } from "@services/workspace.js";
+import { WorkspaceCreation } from "@models/workspace.js";
 
 export interface WorkspaceController {
   getWorkspaces(request: FastifyRequest, reply: FastifyReply): Promise<void>;
   getWorkspace(
     request: FastifyRequest<{ Params: { workspaceId: string } }>,
+    reply: FastifyReply,
+  ): Promise<void>;
+  createWorkspace(
+    request: FastifyRequest<{ Body: WorkspaceCreation }>,
     reply: FastifyReply,
   ): Promise<void>;
 }
@@ -28,5 +33,16 @@ export class DefaultWorkspaceController implements WorkspaceController {
       request.params.workspaceId,
     );
     reply.code(200).send(workspace);
+  }
+
+  async createWorkspace(
+    request: FastifyRequest<{ Body: WorkspaceCreation }>,
+    reply: FastifyReply,
+  ) {
+    const workspace = await this.workspaceService.createWorkspace(
+      request.user.id,
+      request.body,
+    );
+    reply.code(201).send(workspace);
   }
 }

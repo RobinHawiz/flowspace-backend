@@ -1,5 +1,5 @@
 import { WorkspaceRepository } from "@repositories/workspace.js";
-import { WorkspaceEntity } from "@models/workspace.js";
+import { WorkspaceCreation, WorkspaceEntity } from "@models/workspace.js";
 import { ForbiddenError, NotFoundError } from "@errors/appError.js";
 
 export interface WorkspaceService {
@@ -13,6 +13,14 @@ export interface WorkspaceService {
   getWorkspace(
     app_user_id: number,
     workspace_id: string,
+  ): Promise<WorkspaceEntity>;
+
+  /**
+   * Creates a workspace and assigns the current app user to it with an admin role.
+   */
+  createWorkspace(
+    app_user_id: number,
+    payload: WorkspaceCreation,
   ): Promise<WorkspaceEntity>;
 }
 
@@ -40,5 +48,9 @@ export class DefaultWorkspaceService implements WorkspaceService {
       );
     }
     return result;
+  }
+
+  async createWorkspace(app_user_id: number, payload: WorkspaceCreation) {
+    return await this.workspaceRepo.createWorkspace(app_user_id, payload);
   }
 }
