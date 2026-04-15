@@ -23,6 +23,10 @@ export interface WorkspaceController {
     request: FastifyRequest<{ Params: { workspaceId: string } }>,
     reply: FastifyReply,
   ): Promise<void>;
+  getWorkspaceMembers(
+    request: FastifyRequest<{ Params: { workspaceId: string } }>,
+    reply: FastifyReply,
+  ): Promise<void>;
   addWorkspaceMember(
     request: FastifyRequest<{
       Params: { workspaceId: string };
@@ -90,6 +94,18 @@ export class DefaultWorkspaceController implements WorkspaceController {
     );
 
     reply.code(204).send();
+  }
+
+  async getWorkspaceMembers(
+    request: FastifyRequest<{ Params: { workspaceId: string } }>,
+    reply: FastifyReply,
+  ) {
+    const members = await this.workspaceService.getWorkspaceMembers(
+      request.user.id,
+      request.params.workspaceId,
+    );
+
+    reply.code(200).send(members);
   }
 
   async addWorkspaceMember(

@@ -53,6 +53,14 @@ export interface WorkspaceRepository {
    */
   deleteWorkspace(workspace_id: string): Promise<void>;
   /**
+   * Retrieves the members of a workspace.
+   *
+   * @throws InternalServerError If there is an error during database retrieval.
+   */
+  getWorkspaceMembers(
+    workspace_id: string,
+  ): Promise<Array<WorkspaceMemberResponse>>;
+  /**
    * Adds a member to a workspace.
    *
    * @throws ConflictError If the user is already a member of the workspace.
@@ -173,6 +181,22 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace deletion error.`);
+    }
+  }
+
+  async getWorkspaceMembers(workspace_id: string) {
+    const sql: QueryConfig = {
+      text: `select au.first_name as "firstName", au.last_name as "lastName", au.email, awu.role
+            from app_user au
+            inner join assigned_workspace_user awu on awu.app_user_id = au.id
+            where awu.workspace_id = $1`,
+      values: [workspace_id],
+    };
+    try {
+      return (await this.pool.query<WorkspaceMemberResponse>(sql)).rows;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace members lookup error.`);
     }
   }
 

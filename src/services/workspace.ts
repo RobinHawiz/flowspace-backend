@@ -43,6 +43,14 @@ export interface WorkspaceService {
   deleteWorkspace(app_user_id: number, workspace_id: string): Promise<void>;
 
   /**
+   * Retrieves the members of a workspace. Only users with access to the workspace can perform this action.
+   */
+  getWorkspaceMembers(
+    app_user_id: number,
+    workspace_id: string,
+  ): Promise<Array<WorkspaceMemberResponse>>;
+
+  /**
    * Adds a member to a workspace. Only users with an admin role in the workspace can perform this action.
    */
   addWorkspaceMember(
@@ -83,6 +91,26 @@ export class DefaultWorkspaceService implements WorkspaceService {
 
   async createWorkspace(app_user_id: number, payload: WorkspaceCreation) {
     return await this.workspaceRepo.createWorkspace(app_user_id, payload);
+  }
+
+  async getWorkspaceMembers(app_user_id: number, workspace_id: string) {
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    return await this.workspaceRepo.getWorkspaceMembers(workspace_id);
   }
 
   async updateWorkspaceTitle(

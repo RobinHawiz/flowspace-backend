@@ -81,6 +81,19 @@ export class DefaultWorkspaceRoutes implements WorkspaceRoutes {
       },
     );
 
+    // Get all members of a workspace.
+    app.get<{
+      Params: { workspaceId: string };
+    }>(
+      "/api/workspaces/:workspaceId/members",
+      {
+        onRequest: authenticateToken,
+      },
+      async (request, reply) => {
+        await this.workspaceController.getWorkspaceMembers(request, reply);
+      },
+    );
+
     // Add workspace member.
     app.post<{ Params: { workspaceId: string }; Body: { email: string } }>(
       "/api/workspaces/:workspaceId/members",
