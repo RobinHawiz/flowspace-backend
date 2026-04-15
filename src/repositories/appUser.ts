@@ -1,6 +1,6 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
-import { InternalServerError } from "@errors/appError.js";
+import { ConflictError, InternalServerError } from "@errors/appError.js";
 import {
   AppUserInsert,
   AppUserEntity,
@@ -23,6 +23,7 @@ export interface AppUserRepository {
   /**
    * Inserts a user and returns the inserted user.
    *
+   * @throws ConflictError If a user with the same email already exists.
    * @throws InternalServerError If there is an error during database insertion.
    */
   insertAppUser(newUser: AppUserInsert): Promise<AppUserResponse>;
@@ -78,6 +79,9 @@ export class PostgreSQLAppUserRepository implements AppUserRepository {
     try {
       return (await this.pool.query<AppUserResponse>(sql)).rows[0];
     } catch (err) {
+      if ((err as any).code === "23505") {
+        throw new ConflictError(`App user already exists.`);
+      }
       this.logger.error(err);
       throw new InternalServerError(`Database app user insertion error.`);
     }

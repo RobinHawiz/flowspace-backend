@@ -7,7 +7,6 @@ import {
   AppUserInsert,
 } from "@models/appUser.js";
 import {
-  ConflictError,
   InternalServerError,
   NotFoundError,
   UnauthorizedError,
@@ -29,8 +28,6 @@ export interface AuthService {
   getAppUser(id: number): Promise<AppUserResponse>;
   /**
    * Attempts to register a new app user.
-   *
-   * @throws ConflictError if a user with the same email already exists.
    */
   insertAppUser(userPayload: AppUserRegistration): Promise<AppUserResponse>;
 }
@@ -73,11 +70,6 @@ export class DefaultAuthService implements AuthService {
   }
 
   async insertAppUser(payload: AppUserRegistration) {
-    const appUser = await this.appUserRepo.findByEmail(payload.email);
-    if (appUser) {
-      throw new ConflictError(`App user already exists`);
-    }
-
     const { firstName, lastName, email, password } = payload;
     const passwordHash = await bcrypt.hash(password, 10);
 
