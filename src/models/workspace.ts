@@ -16,7 +16,7 @@ export type WorkspaceResponse = Pick<WorkspaceEntity, "id" | "title"> & {
 
 export type WorkspaceMemberResponse = Pick<
   AppUserEntity,
-  "firstName" | "lastName" | "email"
+  "id" | "firstName" | "lastName" | "email"
 > & {
   role: "admin" | "member";
 };

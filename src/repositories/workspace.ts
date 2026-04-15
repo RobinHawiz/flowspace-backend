@@ -186,7 +186,7 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
 
   async getWorkspaceMembers(workspace_id: string) {
     const sql: QueryConfig = {
-      text: `select au.first_name as "firstName", au.last_name as "lastName", au.email, awu.role
+      text: `select au.id, au.first_name as "firstName", au.last_name as "lastName", au.email, awu.role
             from app_user au
             inner join assigned_workspace_user awu on awu.app_user_id = au.id
             where awu.workspace_id = $1`,
@@ -213,6 +213,7 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
       }>(sqlAssignWorkspace);
       const role = assignWorkspaceResult.rows[0].role;
       const output: WorkspaceMemberResponse = {
+        id: appUser.id,
         firstName: appUser.firstName,
         lastName: appUser.lastName,
         email: appUser.email,
