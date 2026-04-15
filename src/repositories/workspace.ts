@@ -70,6 +70,12 @@ export interface WorkspaceRepository {
     workspace_id: string,
     appUser: AppUserEntity,
   ): Promise<WorkspaceMemberResponse>;
+  /**
+   * Removes a member from a workspace.
+   *
+   * @throws InternalServerError If there is an error during database operation.
+   */
+  removeWorkspaceMember(workspace_id: string, member_id: string): Promise<void>;
 }
 
 export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
@@ -228,6 +234,19 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
       throw new InternalServerError(
         `Database workspace member addition error.`,
       );
+    }
+  }
+
+  async removeWorkspaceMember(workspace_id: string, member_id: string) {
+    const sql: QueryConfig = {
+      text: `delete from assigned_workspace_user where workspace_id = $1 and app_user_id = $2`,
+      values: [workspace_id, member_id],
+    };
+    try {
+      await this.pool.query(sql);
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace member removal error.`);
     }
   }
 }

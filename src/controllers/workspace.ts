@@ -34,6 +34,12 @@ export interface WorkspaceController {
     }>,
     reply: FastifyReply,
   ): Promise<void>;
+  removeWorkspaceMember(
+    request: FastifyRequest<{
+      Params: { workspaceId: string; appUserId: string };
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
 }
 
 export class DefaultWorkspaceController implements WorkspaceController {
@@ -122,5 +128,20 @@ export class DefaultWorkspaceController implements WorkspaceController {
     );
 
     reply.code(201).send(appUser);
+  }
+
+  async removeWorkspaceMember(
+    request: FastifyRequest<{
+      Params: { workspaceId: string; appUserId: string };
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.workspaceService.removeWorkspaceMember(
+      request.user.id,
+      request.params.workspaceId,
+      request.params.appUserId,
+    );
+
+    reply.code(204).send();
   }
 }

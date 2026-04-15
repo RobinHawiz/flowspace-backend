@@ -58,6 +58,14 @@ export interface WorkspaceService {
     workspace_id: string,
     email: string,
   ): Promise<WorkspaceMemberResponse>;
+  /**
+   * Removes a member from a workspace. Only users with an admin role in the workspace can perform this action.
+   */
+  removeWorkspaceMember(
+    app_user_id: number,
+    workspace_id: string,
+    member_id: string,
+  ): Promise<void>;
 }
 
 export class DefaultWorkspaceService implements WorkspaceService {
@@ -198,5 +206,55 @@ export class DefaultWorkspaceService implements WorkspaceService {
     }
 
     return await this.workspaceRepo.addWorkspaceMember(workspace_id, appUser);
+  }
+
+  async removeWorkspaceMember(
+    app_user_id: number,
+    workspace_id: string,
+    member_id: string,
+  ) {
+    const isRemovingSelf = app_user_id.toString() === member_id;
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+    const resultAppUser = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!resultAppUser) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    } else if (resultAppUser.role === "member" && isRemovingSelf) {
+      return await this.workspaceRepo.removeWorkspaceMember(
+        workspace_id,
+        member_id,
+      );
+    } else if (resultAppUser.role !== "admin") {
+      throw new ForbiddenError(
+        `Current app user does not have admin access to this workspace.`,
+      );
+    } else if (resultAppUser.role === "admin" && isRemovingSelf) {
+      throw new ForbiddenError(
+        `Admin users cannot remove themselves from the workspace.`,
+      );
+    }
+
+    const resultMember = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      parseInt(member_id),
+      workspace_id,
+    );
+    if (!resultMember) {
+      throw new NotFoundError(
+        `The member to be removed does not exist in this workspace.`,
+      );
+    }
+
+    return await this.workspaceRepo.removeWorkspaceMember(
+      workspace_id,
+      member_id,
+    );
   }
 }
