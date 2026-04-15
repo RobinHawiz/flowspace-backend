@@ -38,3 +38,12 @@ export const appUserCredentialsSchema: JSONSchemaType<AppUserCredentials> = {
   required: ["email", "password"],
   additionalProperties: false,
 };
+
+export const appUserEmailSchema: JSONSchemaType<{ email: string }> = {
+  type: "object",
+  properties: {
+    email: { type: "string", format: "email" },
+  },
+  required: ["email"],
+  additionalProperties: false,
+};

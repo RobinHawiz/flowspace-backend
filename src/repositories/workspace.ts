@@ -1,11 +1,12 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
-import { InternalServerError } from "@errors/appError.js";
+import { ConflictError, InternalServerError } from "@errors/appError.js";
 import {
   WorkspaceCreation,
   WorkspaceEntity,
   WorkspaceResponse,
 } from "@models/workspace.js";
+import { AppUserEntity, AppUserWorkspaceResponse } from "@models/appUser.js";
 
 export interface WorkspaceRepository {
   /**
@@ -50,6 +51,16 @@ export interface WorkspaceRepository {
    * @throws InternalServerError If there is an error during database deletion.
    */
   deleteWorkspace(workspace_id: string): Promise<void>;
+  /**
+   * Adds a member to a workspace.
+   *
+   * @throws ConflictError If the user is already a member of the workspace.
+   * @throws InternalServerError If there is an error during database operation.
+   */
+  addWorkspaceMember(
+    workspace_id: string,
+    appUser: AppUserEntity,
+  ): Promise<AppUserWorkspaceResponse>;
 }
 
 export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
@@ -161,6 +172,36 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace deletion error.`);
+    }
+  }
+
+  async addWorkspaceMember(workspace_id: string, appUser: AppUserEntity) {
+    const sqlAssignWorkspace: QueryConfig = {
+      text: `insert into assigned_workspace_user (workspace_id, app_user_id, role)
+            values ($1, $2, 'member') 
+            returning role`,
+      values: [workspace_id, appUser.id],
+    };
+    try {
+      const assignWorkspaceResult = await this.pool.query<{
+        role: "admin" | "member";
+      }>(sqlAssignWorkspace);
+      const role = assignWorkspaceResult.rows[0].role;
+      const output: AppUserWorkspaceResponse = {
+        firstName: appUser.firstName,
+        lastName: appUser.lastName,
+        email: appUser.email,
+        role,
+      };
+      return output;
+    } catch (err) {
+      if ((err as any).code === "23505") {
+        throw new ConflictError(`User is already a member of the workspace.`);
+      }
+      this.logger.error(err);
+      throw new InternalServerError(
+        `Database workspace member addition error.`,
+      );
     }
   }
 }

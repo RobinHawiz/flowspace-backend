@@ -33,3 +33,10 @@ export type AppUserResponse = Pick<
   AppUserEntity,
   "firstName" | "lastName" | "email"
 >;
+
+export type AppUserWorkspaceResponse = Pick<
+  AppUserEntity,
+  "firstName" | "lastName" | "email"
+> & {
+  role: "admin" | "member";
+};

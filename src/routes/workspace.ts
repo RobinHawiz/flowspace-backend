@@ -3,6 +3,7 @@ import authenticateToken from "@hooks/authenticateToken.js";
 import { WorkspaceController } from "@controllers/workspace.js";
 import { WorkspaceCreation } from "@models/workspace.js";
 import { workspaceCreationSchema } from "@schemas/workspace.js";
+import { appUserEmailSchema } from "@schemas/appUser.js";
 
 export interface WorkspaceRoutes {
   initRoutes(app: FastifyInstance): void;
@@ -77,6 +78,20 @@ export class DefaultWorkspaceRoutes implements WorkspaceRoutes {
       },
       async (request, reply) => {
         await this.workspaceController.deleteWorkspace(request, reply);
+      },
+    );
+
+    // Add workspace member.
+    app.post<{ Params: { workspaceId: string }; Body: { email: string } }>(
+      "/api/workspaces/:workspaceId/members",
+      {
+        onRequest: authenticateToken,
+        schema: {
+          body: appUserEmailSchema,
+        },
+      },
+      async (request, reply) => {
+        await this.workspaceController.addWorkspaceMember(request, reply);
       },
     );
   }
