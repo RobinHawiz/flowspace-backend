@@ -5,8 +5,9 @@ import {
   WorkspaceCreation,
   WorkspaceEntity,
   WorkspaceResponse,
+  WorkspaceMemberResponse,
 } from "@models/workspace.js";
-import { AppUserEntity, AppUserWorkspaceResponse } from "@models/appUser.js";
+import { AppUserEntity } from "@models/appUser.js";
 
 export interface WorkspaceRepository {
   /**
@@ -60,7 +61,7 @@ export interface WorkspaceRepository {
   addWorkspaceMember(
     workspace_id: string,
     appUser: AppUserEntity,
-  ): Promise<AppUserWorkspaceResponse>;
+  ): Promise<WorkspaceMemberResponse>;
 }
 
 export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
@@ -187,7 +188,7 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
         role: "admin" | "member";
       }>(sqlAssignWorkspace);
       const role = assignWorkspaceResult.rows[0].role;
-      const output: AppUserWorkspaceResponse = {
+      const output: WorkspaceMemberResponse = {
         firstName: appUser.firstName,
         lastName: appUser.lastName,
         email: appUser.email,

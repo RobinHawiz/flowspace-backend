@@ -2,9 +2,9 @@ import {
   WorkspaceCreation,
   WorkspaceEntity,
   WorkspaceResponse,
+  WorkspaceMemberResponse,
 } from "@models/workspace.js";
 import { ForbiddenError, NotFoundError } from "@errors/appError.js";
-import { AppUserWorkspaceResponse } from "@models/appUser.js";
 import { AppUserRepository, WorkspaceRepository } from "@repositories/index.js";
 
 export interface WorkspaceService {
@@ -49,7 +49,7 @@ export interface WorkspaceService {
     app_user_id: number,
     workspace_id: string,
     email: string,
-  ): Promise<AppUserWorkspaceResponse>;
+  ): Promise<WorkspaceMemberResponse>;
 }
 
 export class DefaultWorkspaceService implements WorkspaceService {
