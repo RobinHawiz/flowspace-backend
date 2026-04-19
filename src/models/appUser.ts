@@ -31,5 +31,5 @@ export type AppUserCredentials = Pick<AppUserEntity, "email"> & {
 // Safe app user data returned in responses.
 export type AppUserResponse = Pick<
   AppUserEntity,
-  "firstName" | "lastName" | "email"
+  "id" | "firstName" | "lastName" | "email"
 >;

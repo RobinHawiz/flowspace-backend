@@ -51,7 +51,7 @@ export class PostgreSQLAppUserRepository implements AppUserRepository {
 
   async findOneAppUser(id: number) {
     const sql: QueryConfig = {
-      text: `select first_name as "firstName", last_name as "lastName", email
+      text: `select id, first_name as "firstName", last_name as "lastName", email
       from app_user
       where id = $1`,
       values: [id],
