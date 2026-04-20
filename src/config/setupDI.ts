@@ -2,18 +2,25 @@ import { FastifyBaseLogger } from "fastify";
 import { asFunction, asClass, asValue } from "awilix";
 import { diContainer } from "@fastify/awilix";
 import createPostgreSQLPool from "@config/db.js";
-import { DefaultAuthRoutes, DefaultWorkspaceRoutes } from "@routes/index.js";
+import {
+  DefaultAuthRoutes,
+  DefaultWorkspaceRoutes,
+  DefaultWorkspaceColumnRoutes,
+} from "@routes/index.js";
 import {
   DefaultAuthController,
   DefaultWorkspaceController,
+  DefaultWorkspaceColumnController,
 } from "@controllers/index.js";
 import {
   DefaultAuthService,
   DefaultWorkspaceService,
+  DefaultWorkspaceColumnService,
 } from "@services/index.js";
 import {
   PostgreSQLAppUserRepository,
   PostgreSQLWorkspaceRepository,
+  PostgreSQLWorkspaceColumnRepository,
 } from "@repositories/index.js";
 
 export default function setupDI(logger: FastifyBaseLogger) {
@@ -32,5 +39,17 @@ export default function setupDI(logger: FastifyBaseLogger) {
       .singleton(),
     workspaceService: asClass(DefaultWorkspaceService).classic().singleton(),
     workspaceRepo: asClass(PostgreSQLWorkspaceRepository).classic().singleton(),
+    workspaceColumnRoutes: asClass(DefaultWorkspaceColumnRoutes)
+      .classic()
+      .singleton(),
+    workspaceColumnController: asClass(DefaultWorkspaceColumnController)
+      .classic()
+      .singleton(),
+    workspaceColumnService: asClass(DefaultWorkspaceColumnService)
+      .classic()
+      .singleton(),
+    workspaceColumnRepo: asClass(PostgreSQLWorkspaceColumnRepository)
+      .classic()
+      .singleton(),
   });
 }

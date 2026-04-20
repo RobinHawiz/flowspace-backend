@@ -1,9 +1,25 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool } from "pg";
-import { AuthRoutes, WorkspaceRoutes } from "@routes/index.js";
-import { AuthController, WorkspaceController } from "@controllers/index.js";
-import { AuthService, WorkspaceService } from "@services/index.js";
-import { AppUserRepository, WorkspaceRepository } from "@repositories/index.js";
+import {
+  AuthRoutes,
+  WorkspaceRoutes,
+  WorkspaceColumnRoutes,
+} from "@routes/index.js";
+import {
+  AuthController,
+  WorkspaceController,
+  WorkspaceColumnController,
+} from "@controllers/index.js";
+import {
+  AuthService,
+  WorkspaceService,
+  WorkspaceColumnService,
+} from "@services/index.js";
+import {
+  AppUserRepository,
+  WorkspaceRepository,
+  WorkspaceColumnRepository,
+} from "@repositories/index.js";
 import { AuthTokenPayload } from "@models/auth.js";
 
 declare module "fastify" {
@@ -24,5 +40,9 @@ declare module "@fastify/awilix" {
     workspaceController: WorkspaceController;
     workspaceService: WorkspaceService;
     workspaceRepo: WorkspaceRepository;
+    workspaceColumnRoutes: WorkspaceColumnRoutes;
+    workspaceColumnController: WorkspaceColumnController;
+    workspaceColumnService: WorkspaceColumnService;
+    workspaceColumnRepo: WorkspaceColumnRepository;
   }
 }
