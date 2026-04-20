@@ -1,8 +1,14 @@
 import { FastifyInstance } from "fastify";
 import authenticateToken from "@hooks/authenticateToken.js";
 import { WorkspaceColumnController } from "@controllers/workspaceColumn.js";
-import { WorkspaceColumnCreation } from "@models/workspaceColumn.js";
-import { workspaceColumnCreationSchema } from "@schemas/workspaceColumn.js";
+import {
+  WorkspaceColumnCreation,
+  WorkspaceColumnTitleUpdate,
+} from "@models/workspaceColumn.js";
+import {
+  workspaceColumnCreationSchema,
+  workspaceColumnTitleUpdateSchema,
+} from "@schemas/workspaceColumn.js";
 
 export interface WorkspaceColumnRoutes {
   initRoutes(app: FastifyInstance): void;
@@ -60,6 +66,26 @@ export class DefaultWorkspaceColumnRoutes implements WorkspaceColumnRoutes {
       },
       async (request, reply) => {
         await this.workspaceColumnController.deleteWorkspaceColumn(
+          request,
+          reply,
+        );
+      },
+    );
+
+    // Update workspace column title.
+    app.patch<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+      Body: WorkspaceColumnTitleUpdate;
+    }>(
+      "/api/workspaces/:workspaceId/workspace-columns/:workspaceColumnId/title",
+      {
+        onRequest: authenticateToken,
+        schema: {
+          body: workspaceColumnTitleUpdateSchema,
+        },
+      },
+      async (request, reply) => {
+        await this.workspaceColumnController.updateWorkspaceColumnTitle(
           request,
           reply,
         );

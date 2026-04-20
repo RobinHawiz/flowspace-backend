@@ -2,6 +2,7 @@ import { ForbiddenError, NotFoundError } from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
   WorkspaceColumnResponse,
+  WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
 import {
   WorkspaceColumnRepository,
@@ -24,6 +25,15 @@ export interface WorkspaceColumnService {
     workspace_id: string,
     payload: WorkspaceColumnCreation,
   ): Promise<WorkspaceColumnResponse>;
+  /**
+   * Updates the title of a workspace column. Only users with access to the workspace can perform this action.
+   */
+  updateWorkspaceColumnTitle(
+    app_user_id: number,
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnTitleUpdate,
+  ): Promise<void>;
   /**
    * Deletes a workspace column. Only users with access to the workspace can perform this action.
    */
@@ -113,6 +123,40 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
       workspace_column_id,
     );
     if (!isDeleted) {
+      throw new NotFoundError(
+        `Workspace column with the given ID does not exist in this workspace.`,
+      );
+    }
+  }
+
+  async updateWorkspaceColumnTitle(
+    app_user_id: number,
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnTitleUpdate,
+  ) {
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    const isUpdated = await this.workspaceColumnRepo.updateWorkspaceColumnTitle(
+      workspace_id,
+      workspace_column_id,
+      payload,
+    );
+    if (!isUpdated) {
       throw new NotFoundError(
         `Workspace column with the given ID does not exist in this workspace.`,
       );

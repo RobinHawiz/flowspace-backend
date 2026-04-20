@@ -4,6 +4,7 @@ import { ConflictError, InternalServerError } from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
   WorkspaceColumnResponse,
+  WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
 
 export interface WorkspaceColumnRepository {
@@ -32,6 +33,16 @@ export interface WorkspaceColumnRepository {
   deleteWorkspaceColumn(
     workspace_id: string,
     workspace_column_id: string,
+  ): Promise<boolean>;
+  /**
+   * Updates the title of a workspace column and returns whether the update was successful.
+   *
+   * @throws InternalServerError If there is an error during database update.
+   */
+  updateWorkspaceColumnTitle(
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnTitleUpdate,
   ): Promise<boolean>;
 }
 
@@ -99,6 +110,26 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
       throw new InternalServerError(
         `Database workspace column deletion error.`,
       );
+    }
+  }
+
+  async updateWorkspaceColumnTitle(
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnTitleUpdate,
+  ) {
+    const sql: QueryConfig = {
+      text: `update workspace_column
+            set title = $1
+            where workspace_id = $2 and id = $3
+            returning id`,
+      values: [payload.title, workspace_id, workspace_column_id],
+    };
+    try {
+      return (await this.pool.query<{ id: string }>(sql)).rows.length === 1;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace column update error.`);
     }
   }
 }
