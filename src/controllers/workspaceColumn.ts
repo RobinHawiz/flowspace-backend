@@ -1,16 +1,22 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { WorkspaceColumnService } from "@services/workspaceColumn.js";
+import { WorkspaceColumnCreation } from "@models/workspaceColumn.js";
 
 export interface WorkspaceColumnController {
   getWorkspaceColumns(
     request: FastifyRequest<{ Params: { workspaceId: string } }>,
     reply: FastifyReply,
   ): Promise<void>;
+  createWorkspaceColumn(
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Body: WorkspaceColumnCreation;
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
 }
 
-export class DefaultWorkspaceColumnController
-  implements WorkspaceColumnController
-{
+export class DefaultWorkspaceColumnController implements WorkspaceColumnController {
   constructor(
     private readonly workspaceColumnService: WorkspaceColumnService,
   ) {}
@@ -25,5 +31,21 @@ export class DefaultWorkspaceColumnController
     );
 
     reply.code(200).send(columns);
+  }
+
+  async createWorkspaceColumn(
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Body: WorkspaceColumnCreation;
+    }>,
+    reply: FastifyReply,
+  ) {
+    const workspaceColumn =
+      await this.workspaceColumnService.createWorkspaceColumn(
+        request.user.id,
+        request.params.workspaceId,
+        request.body,
+      );
+    reply.code(201).send(workspaceColumn);
   }
 }

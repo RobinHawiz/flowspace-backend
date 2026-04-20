@@ -11,3 +11,8 @@ export type WorkspaceColumnResponse = Pick<
   WorkspaceColumnEntity,
   "id" | "title" | "workspaceColumnOrder"
 >;
+
+export type WorkspaceColumnCreation = Pick<
+  WorkspaceColumnEntity,
+  "title" | "workspaceColumnOrder"
+>;

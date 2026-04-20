@@ -1,7 +1,10 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
-import { InternalServerError } from "@errors/appError.js";
-import { WorkspaceColumnResponse } from "@models/workspaceColumn.js";
+import { ConflictError, InternalServerError } from "@errors/appError.js";
+import {
+  WorkspaceColumnCreation,
+  WorkspaceColumnResponse,
+} from "@models/workspaceColumn.js";
 
 export interface WorkspaceColumnRepository {
   /**
@@ -12,11 +15,18 @@ export interface WorkspaceColumnRepository {
   findWorkspaceColumns(
     workspace_id: string,
   ): Promise<Array<WorkspaceColumnResponse>>;
+  /**
+   * Creates a workspace column.
+   *
+   * @throws InternalServerError If there is an error during database insertion.
+   */
+  createWorkspaceColumn(
+    workspace_id: string,
+    payload: WorkspaceColumnCreation,
+  ): Promise<WorkspaceColumnResponse>;
 }
 
-export class PostgreSQLWorkspaceColumnRepository
-  implements WorkspaceColumnRepository
-{
+export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepository {
   constructor(
     private readonly pool: Pool,
     private readonly logger: FastifyBaseLogger,
@@ -35,6 +45,31 @@ export class PostgreSQLWorkspaceColumnRepository
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace column lookup error.`);
+    }
+  }
+
+  async createWorkspaceColumn(
+    workspace_id: string,
+    payload: WorkspaceColumnCreation,
+  ) {
+    const sql: QueryConfig = {
+      text: `insert into workspace_column (workspace_id, title, workspace_column_order)
+            values ($1, $2, $3)
+            returning id, title, workspace_column_order as "workspaceColumnOrder"`,
+      values: [workspace_id, payload.title, payload.workspaceColumnOrder],
+    };
+    try {
+      return (await this.pool.query<WorkspaceColumnResponse>(sql)).rows[0];
+    } catch (err) {
+      if ((err as any).code === "23505") {
+        throw new ConflictError(
+          `A column with the same order already exists in this workspace.`,
+        );
+      }
+      this.logger.error(err);
+      throw new InternalServerError(
+        `Database workspace column creation error.`,
+      );
     }
   }
 }
