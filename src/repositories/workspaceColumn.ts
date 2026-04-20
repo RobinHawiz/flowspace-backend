@@ -25,23 +25,14 @@ export interface WorkspaceColumnRepository {
     payload: WorkspaceColumnCreation,
   ): Promise<WorkspaceColumnResponse>;
   /**
-   * Returns a specific workspace column.
-   *
-   * @throws InternalServerError If there is an error during database retrieval.
-   */
-  findWorkspaceColumn(
-    workspace_id: string,
-    workspace_column_id: string,
-  ): Promise<WorkspaceColumnResponse | undefined>;
-  /**
-   * Deletes a workspace column.
+   * Deletes a workspace column and returns whether the deletion was successful.
    *
    * @throws InternalServerError If there is an error during database deletion.
    */
   deleteWorkspaceColumn(
     workspace_id: string,
     workspace_column_id: string,
-  ): Promise<void>;
+  ): Promise<boolean>;
 }
 
 export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepository {
@@ -91,34 +82,18 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
     }
   }
 
-  async findWorkspaceColumn(
-    workspace_id: string,
-    workspace_column_id: string,
-  ) {
-    const sql: QueryConfig = {
-      text: `select id, title, workspace_column_order as "workspaceColumnOrder"
-            from workspace_column
-            where workspace_id = $1 and id = $2`,
-      values: [workspace_id, workspace_column_id],
-    };
-    try {
-      return (await this.pool.query<WorkspaceColumnResponse>(sql)).rows[0];
-    } catch (err) {
-      this.logger.error(err);
-      throw new InternalServerError(`Database workspace column lookup error.`);
-    }
-  }
-
   async deleteWorkspaceColumn(
     workspace_id: string,
     workspace_column_id: string,
   ) {
     const sql: QueryConfig = {
-      text: `delete from workspace_column where workspace_id = $1 and id = $2`,
+      text: `delete from workspace_column 
+            where workspace_id = $1 and id = $2
+            returning id`,
       values: [workspace_id, workspace_column_id],
     };
     try {
-      await this.pool.query(sql);
+      return (await this.pool.query<{ id: string }>(sql)).rows.length === 1;
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(
