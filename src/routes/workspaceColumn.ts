@@ -49,5 +49,21 @@ export class DefaultWorkspaceColumnRoutes implements WorkspaceColumnRoutes {
         );
       },
     );
+
+    // Delete workspace column.
+    app.delete<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+    }>(
+      "/api/workspaces/:workspaceId/workspace-columns/:workspaceColumnId",
+      {
+        onRequest: authenticateToken,
+      },
+      async (request, reply) => {
+        await this.workspaceColumnController.deleteWorkspaceColumn(
+          request,
+          reply,
+        );
+      },
+    );
   }
 }

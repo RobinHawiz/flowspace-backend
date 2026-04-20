@@ -24,6 +24,24 @@ export interface WorkspaceColumnRepository {
     workspace_id: string,
     payload: WorkspaceColumnCreation,
   ): Promise<WorkspaceColumnResponse>;
+  /**
+   * Returns a specific workspace column.
+   *
+   * @throws InternalServerError If there is an error during database retrieval.
+   */
+  findWorkspaceColumn(
+    workspace_id: string,
+    workspace_column_id: string,
+  ): Promise<WorkspaceColumnResponse | undefined>;
+  /**
+   * Deletes a workspace column.
+   *
+   * @throws InternalServerError If there is an error during database deletion.
+   */
+  deleteWorkspaceColumn(
+    workspace_id: string,
+    workspace_column_id: string,
+  ): Promise<void>;
 }
 
 export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepository {
@@ -69,6 +87,42 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
       this.logger.error(err);
       throw new InternalServerError(
         `Database workspace column creation error.`,
+      );
+    }
+  }
+
+  async findWorkspaceColumn(
+    workspace_id: string,
+    workspace_column_id: string,
+  ) {
+    const sql: QueryConfig = {
+      text: `select id, title, workspace_column_order as "workspaceColumnOrder"
+            from workspace_column
+            where workspace_id = $1 and id = $2`,
+      values: [workspace_id, workspace_column_id],
+    };
+    try {
+      return (await this.pool.query<WorkspaceColumnResponse>(sql)).rows[0];
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace column lookup error.`);
+    }
+  }
+
+  async deleteWorkspaceColumn(
+    workspace_id: string,
+    workspace_column_id: string,
+  ) {
+    const sql: QueryConfig = {
+      text: `delete from workspace_column where workspace_id = $1 and id = $2`,
+      values: [workspace_id, workspace_column_id],
+    };
+    try {
+      await this.pool.query(sql);
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(
+        `Database workspace column deletion error.`,
       );
     }
   }

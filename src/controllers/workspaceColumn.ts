@@ -14,6 +14,12 @@ export interface WorkspaceColumnController {
     }>,
     reply: FastifyReply,
   ): Promise<void>;
+  deleteWorkspaceColumn(
+    request: FastifyRequest<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
 }
 
 export class DefaultWorkspaceColumnController implements WorkspaceColumnController {
@@ -47,5 +53,20 @@ export class DefaultWorkspaceColumnController implements WorkspaceColumnControll
         request.body,
       );
     reply.code(201).send(workspaceColumn);
+  }
+
+  async deleteWorkspaceColumn(
+    request: FastifyRequest<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.workspaceColumnService.deleteWorkspaceColumn(
+      request.user.id,
+      request.params.workspaceId,
+      request.params.workspaceColumnId,
+    );
+
+    reply.code(204).send();
   }
 }

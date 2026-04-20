@@ -24,6 +24,14 @@ export interface WorkspaceColumnService {
     workspace_id: string,
     payload: WorkspaceColumnCreation,
   ): Promise<WorkspaceColumnResponse>;
+  /**
+   * Deletes a workspace column. Only users with access to the workspace can perform this action.
+   */
+  deleteWorkspaceColumn(
+    app_user_id: number,
+    workspace_id: string,
+    workspace_column_id: string,
+  ): Promise<void>;
 }
 
 export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
@@ -76,6 +84,43 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
     return await this.workspaceColumnRepo.createWorkspaceColumn(
       workspace_id,
       payload,
+    );
+  }
+
+  async deleteWorkspaceColumn(
+    app_user_id: number,
+    workspace_id: string,
+    workspace_column_id: string,
+  ) {
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    const workspaceColumn = await this.workspaceColumnRepo.findWorkspaceColumn(
+      workspace_id,
+      workspace_column_id,
+    );
+    if (!workspaceColumn) {
+      throw new NotFoundError(
+        `Workspace column with the given ID does not exist.`,
+      );
+    }
+
+    return await this.workspaceColumnRepo.deleteWorkspaceColumn(
+      workspace_id,
+      workspace_column_id,
     );
   }
 }
