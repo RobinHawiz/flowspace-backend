@@ -3,10 +3,12 @@ import authenticateToken from "@hooks/authenticateToken.js";
 import { WorkspaceColumnController } from "@controllers/workspaceColumn.js";
 import {
   WorkspaceColumnCreation,
+  WorkspaceColumnOrderUpdate,
   WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
 import {
   workspaceColumnCreationSchema,
+  workspaceColumnOrderUpdateSchema,
   workspaceColumnTitleUpdateSchema,
 } from "@schemas/workspaceColumn.js";
 
@@ -86,6 +88,26 @@ export class DefaultWorkspaceColumnRoutes implements WorkspaceColumnRoutes {
       },
       async (request, reply) => {
         await this.workspaceColumnController.updateWorkspaceColumnTitle(
+          request,
+          reply,
+        );
+      },
+    );
+
+    // Update workspace column order.
+    app.patch<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+      Body: WorkspaceColumnOrderUpdate;
+    }>(
+      "/api/workspaces/:workspaceId/workspace-columns/:workspaceColumnId/order",
+      {
+        onRequest: authenticateToken,
+        schema: {
+          body: workspaceColumnOrderUpdateSchema,
+        },
+      },
+      async (request, reply) => {
+        await this.workspaceColumnController.updateWorkspaceColumnOrder(
           request,
           reply,
         );

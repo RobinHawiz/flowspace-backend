@@ -1,6 +1,7 @@
 import { ForbiddenError, NotFoundError } from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
+  WorkspaceColumnOrderUpdate,
   WorkspaceColumnResponse,
   WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
@@ -33,6 +34,15 @@ export interface WorkspaceColumnService {
     workspace_id: string,
     workspace_column_id: string,
     payload: WorkspaceColumnTitleUpdate,
+  ): Promise<void>;
+  /**
+   * Updates the order of a workspace column. Only users with access to the workspace can perform this action.
+   */
+  updateWorkspaceColumnOrder(
+    app_user_id: number,
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnOrderUpdate,
   ): Promise<void>;
   /**
    * Deletes a workspace column. Only users with access to the workspace can perform this action.
@@ -152,6 +162,40 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
     }
 
     const isUpdated = await this.workspaceColumnRepo.updateWorkspaceColumnTitle(
+      workspace_id,
+      workspace_column_id,
+      payload,
+    );
+    if (!isUpdated) {
+      throw new NotFoundError(
+        `Workspace column with the given ID does not exist in this workspace.`,
+      );
+    }
+  }
+
+  async updateWorkspaceColumnOrder(
+    app_user_id: number,
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnOrderUpdate,
+  ) {
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    const isUpdated = await this.workspaceColumnRepo.updateWorkspaceColumnOrder(
       workspace_id,
       workspace_column_id,
       payload,

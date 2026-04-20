@@ -38,3 +38,19 @@ export const workspaceColumnTitleUpdateSchema: JSONSchemaType<WorkspaceColumnTit
     required: ["title"],
     additionalProperties: false,
   };
+
+/**
+ * Validation schema for workspace column order updates.
+ *
+ * Validates the request body to ensure required fields are present and formatted correctly:
+ * - `workspaceColumnOrder`: non-negative integer.
+ */
+export const workspaceColumnOrderUpdateSchema: JSONSchemaType<WorkspaceColumnOrderUpdate> =
+  {
+    type: "object",
+    properties: {
+      workspaceColumnOrder: { type: "integer", minimum: 0 },
+    },
+    required: ["workspaceColumnOrder"],
+    additionalProperties: false,
+  };

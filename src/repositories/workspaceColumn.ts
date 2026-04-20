@@ -3,6 +3,7 @@ import { Pool, QueryConfig } from "pg";
 import { ConflictError, InternalServerError } from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
+  WorkspaceColumnOrderUpdate,
   WorkspaceColumnResponse,
   WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
@@ -19,6 +20,7 @@ export interface WorkspaceColumnRepository {
   /**
    * Creates a workspace column.
    *
+   * @throws ConflictError If a column with the same order already exists in this workspace.
    * @throws InternalServerError If there is an error during database insertion.
    */
   createWorkspaceColumn(
@@ -43,6 +45,17 @@ export interface WorkspaceColumnRepository {
     workspace_id: string,
     workspace_column_id: string,
     payload: WorkspaceColumnTitleUpdate,
+  ): Promise<boolean>;
+  /**
+   * Updates the order of a workspace column and returns whether the update was successful.
+   *
+   * @throws ConflictError If a column with the same order already exists in this workspace.
+   * @throws InternalServerError If there is an error during database update.
+   */
+  updateWorkspaceColumnOrder(
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnOrderUpdate,
   ): Promise<boolean>;
 }
 
@@ -128,6 +141,31 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
     try {
       return (await this.pool.query<{ id: string }>(sql)).rows.length === 1;
     } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace column update error.`);
+    }
+  }
+
+  async updateWorkspaceColumnOrder(
+    workspace_id: string,
+    workspace_column_id: string,
+    payload: WorkspaceColumnOrderUpdate,
+  ) {
+    const sql: QueryConfig = {
+      text: `update workspace_column
+            set workspace_column_order = $1
+            where workspace_id = $2 and id = $3
+            returning id`,
+      values: [payload.workspaceColumnOrder, workspace_id, workspace_column_id],
+    };
+    try {
+      return (await this.pool.query<{ id: string }>(sql)).rows.length === 1;
+    } catch (err) {
+      if ((err as any).code === "23505") {
+        throw new ConflictError(
+          `A column with the same order already exists in this workspace.`,
+        );
+      }
       this.logger.error(err);
       throw new InternalServerError(`Database workspace column update error.`);
     }

@@ -18,3 +18,8 @@ export type WorkspaceColumnCreation = Pick<
 >;
 
 export type WorkspaceColumnTitleUpdate = Pick<WorkspaceColumnEntity, "title">;
+
+export type WorkspaceColumnOrderUpdate = Pick<
+  WorkspaceColumnEntity,
+  "workspaceColumnOrder"
+>;

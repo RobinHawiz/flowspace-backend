@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { WorkspaceColumnService } from "@services/workspaceColumn.js";
 import {
   WorkspaceColumnCreation,
+  WorkspaceColumnOrderUpdate,
   WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
 
@@ -27,6 +28,13 @@ export interface WorkspaceColumnController {
     request: FastifyRequest<{
       Params: { workspaceId: string; workspaceColumnId: string };
       Body: WorkspaceColumnTitleUpdate;
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
+  updateWorkspaceColumnOrder(
+    request: FastifyRequest<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+      Body: WorkspaceColumnOrderUpdate;
     }>,
     reply: FastifyReply,
   ): Promise<void>;
@@ -88,6 +96,23 @@ export class DefaultWorkspaceColumnController implements WorkspaceColumnControll
     reply: FastifyReply,
   ) {
     await this.workspaceColumnService.updateWorkspaceColumnTitle(
+      request.user.id,
+      request.params.workspaceId,
+      request.params.workspaceColumnId,
+      request.body,
+    );
+
+    reply.code(204).send();
+  }
+
+  async updateWorkspaceColumnOrder(
+    request: FastifyRequest<{
+      Params: { workspaceId: string; workspaceColumnId: string };
+      Body: WorkspaceColumnOrderUpdate;
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.workspaceColumnService.updateWorkspaceColumnOrder(
       request.user.id,
       request.params.workspaceId,
       request.params.workspaceColumnId,
