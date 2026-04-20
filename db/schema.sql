@@ -25,4 +25,14 @@ FOREIGN KEY (app_user_id) REFERENCES app_user(id) ON DELETE CASCADE
 
 CREATE UNIQUE INDEX idx_workspace_role ON assigned_workspace_user (workspace_id, role) WHERE role = 'admin';
 
+CREATE TABLE workspace_column (
+id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+workspace_id INT NOT NULL,
+title VARCHAR(200) NOT NULL,
+workspace_column_order INT NOT NULL,
+FOREIGN KEY (workspace_id) REFERENCES workspace(id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_workspace_column_order ON workspace_column (workspace_id, workspace_column_order);
+
 COMMIT;
