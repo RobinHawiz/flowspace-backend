@@ -3,7 +3,6 @@ import { Pool, QueryConfig } from "pg";
 import { ConflictError, InternalServerError } from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
-  WorkspaceColumnOrderUpdate,
   WorkspaceColumnResponse,
   WorkspaceColumnTitleUpdate,
 } from "@models/workspaceColumn.js";
@@ -55,8 +54,25 @@ export interface WorkspaceColumnRepository {
   updateWorkspaceColumnOrder(
     workspace_id: string,
     workspace_column_id: string,
-    payload: WorkspaceColumnOrderUpdate,
-  ): Promise<boolean>;
+    current_column_order: number,
+    new_column_order: number,
+    column_order_difference: number,
+  ): Promise<void>;
+  /**
+   * Finds the order of a workspace column.
+   *
+   * @throws InternalServerError If there is an error during database retrieval.
+   */
+  findWorkspaceColumnOrder(
+    workspace_id: string,
+    workspace_column_id: string,
+  ): Promise<number | null>;
+  /**
+   * Finds the largest order of the columns in a workspace.
+   *
+   * @throws InternalServerError If there is an error during database retrieval.
+   */
+  findLargestWorkspaceColumnOrder(workspace_id: string): Promise<number>;
 }
 
 export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepository {
@@ -149,18 +165,45 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
   async updateWorkspaceColumnOrder(
     workspace_id: string,
     workspace_column_id: string,
-    payload: WorkspaceColumnOrderUpdate,
+    current_column_order: number,
+    new_column_order: number,
+    column_order_difference: number,
   ) {
-    const sql: QueryConfig = {
-      text: `update workspace_column
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // If the column is being moved forward, the columns between the current and new order should be moved backward.
+      const sqlReindexPrecedingColumns = `
+      set workspace_column_order = workspace_column_order - 1
+      where workspace_id = $1 and workspace_column_order <= $2 and workspace_column_order > $3`;
+      // If the column is being moved backward, the columns between the current and new order should be moved forward.
+      const sqlReindexSubsequentColumns = `
+      set workspace_column_order = workspace_column_order + 1
+      where workspace_id = $1 and workspace_column_order >= $2 and workspace_column_order < $3`;
+
+      const sqlReindexColumns: QueryConfig = {
+        text: `update workspace_column
+            ${column_order_difference > 0 ? sqlReindexPrecedingColumns : sqlReindexSubsequentColumns}`,
+        values: [workspace_id, new_column_order, current_column_order],
+      };
+
+      const sqlReindexSelectedColumn: QueryConfig = {
+        text: `update workspace_column
             set workspace_column_order = $1
             where workspace_id = $2 and id = $3
             returning id`,
-      values: [payload.workspaceColumnOrder, workspace_id, workspace_column_id],
-    };
-    try {
-      return (await this.pool.query<{ id: string }>(sql)).rows.length === 1;
+        values: [new_column_order, workspace_id, workspace_column_id],
+      };
+
+      if (column_order_difference !== 0) {
+        await client.query(sqlReindexColumns);
+      }
+
+      await client.query<{ id: string }>(sqlReindexSelectedColumn);
+      await client.query("COMMIT");
     } catch (err) {
+      await client.query("ROLLBACK");
       if ((err as any).code === "23505") {
         throw new ConflictError(
           `A column with the same order already exists in this workspace.`,
@@ -168,6 +211,53 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
       }
       this.logger.error(err);
       throw new InternalServerError(`Database workspace column update error.`);
+    } finally {
+      client.release();
+    }
+  }
+
+  async findWorkspaceColumnOrder(
+    workspace_id: string,
+    workspace_column_id: string,
+  ) {
+    const sql: QueryConfig = {
+      text: `select workspace_column_order from workspace_column
+            where workspace_id = $1 and id = $2`,
+      values: [workspace_id, workspace_column_id],
+    };
+    try {
+      const result = await this.pool.query<{ workspace_column_order: number }>(
+        sql,
+      );
+      if (result.rows.length === 0) {
+        return null;
+      }
+      return result.rows[0].workspace_column_order;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace column lookup error.`);
+    }
+  }
+
+  async findLargestWorkspaceColumnOrder(workspace_id: string) {
+    const sql: QueryConfig = {
+      text: `select workspace_column_order from workspace_column
+            where workspace_id = $1
+            order by workspace_column_order desc
+            limit 1`,
+      values: [workspace_id],
+    };
+    try {
+      const result = await this.pool.query<{ workspace_column_order: number }>(
+        sql,
+      );
+      if (result.rows.length === 0) {
+        return 0;
+      }
+      return result.rows[0].workspace_column_order;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace column lookup error.`);
     }
   }
 }

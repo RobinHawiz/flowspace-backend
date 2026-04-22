@@ -1,4 +1,8 @@
-import { ForbiddenError, NotFoundError } from "@errors/appError.js";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
   WorkspaceColumnOrderUpdate,
@@ -195,15 +199,35 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
       );
     }
 
-    const isUpdated = await this.workspaceColumnRepo.updateWorkspaceColumnOrder(
-      workspace_id,
-      workspace_column_id,
-      payload,
-    );
-    if (!isUpdated) {
+    const currentColumnOrder =
+      await this.workspaceColumnRepo.findWorkspaceColumnOrder(
+        workspace_id,
+        workspace_column_id,
+      );
+    if (currentColumnOrder === null) {
       throw new NotFoundError(
         `Workspace column with the given ID does not exist in this workspace.`,
       );
     }
+
+    const largestColumnOrder =
+      await this.workspaceColumnRepo.findLargestWorkspaceColumnOrder(
+        workspace_id,
+      );
+    const newColumnOrder = payload.workspaceColumnOrder;
+    if (newColumnOrder > largestColumnOrder) {
+      throw new BadRequestError(
+        `The new column order ${newColumnOrder} exceeds the largest column order ${largestColumnOrder} in this workspace.`,
+      );
+    }
+    const columnOrderDifference = newColumnOrder - currentColumnOrder;
+
+    await this.workspaceColumnRepo.updateWorkspaceColumnOrder(
+      workspace_id,
+      workspace_column_id,
+      currentColumnOrder,
+      newColumnOrder,
+      columnOrderDifference,
+    );
   }
 }
