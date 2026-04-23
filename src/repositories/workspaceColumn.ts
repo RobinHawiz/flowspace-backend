@@ -1,6 +1,11 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
-import { ConflictError, InternalServerError } from "@errors/appError.js";
+import {
+  AppError,
+  ConflictError,
+  InternalServerError,
+  NotFoundError,
+} from "@errors/appError.js";
 import {
   WorkspaceColumnCreation,
   WorkspaceColumnResponse,
@@ -27,14 +32,14 @@ export interface WorkspaceColumnRepository {
     payload: WorkspaceColumnCreation,
   ): Promise<WorkspaceColumnResponse>;
   /**
-   * Deletes a workspace column and returns whether the deletion was successful.
+   * Deletes a workspace column and reindexes the subsequent columns.
    *
    * @throws InternalServerError If there is an error during database deletion.
    */
   deleteWorkspaceColumn(
     workspace_id: string,
     workspace_column_id: string,
-  ): Promise<boolean>;
+  ): Promise<void>;
   /**
    * Updates the title of a workspace column and returns whether the update was successful.
    *
@@ -126,19 +131,47 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
     workspace_id: string,
     workspace_column_id: string,
   ) {
-    const sql: QueryConfig = {
-      text: `delete from workspace_column 
-            where workspace_id = $1 and id = $2
-            returning id`,
-      values: [workspace_id, workspace_column_id],
-    };
+    const client = await this.pool.connect();
     try {
-      return (await this.pool.query<{ id: string }>(sql)).rows.length === 1;
+      await client.query("BEGIN");
+
+      const sql: QueryConfig = {
+        text: `delete from workspace_column 
+            where workspace_id = $1 and id = $2
+            returning workspace_column_order`,
+        values: [workspace_id, workspace_column_id],
+      };
+
+      const sqlReindexColumns: QueryConfig = {
+        text: `update workspace_column
+            set workspace_column_order = workspace_column_order - 1
+            where workspace_id = $1 and workspace_column_order > $2`,
+        values: [workspace_id],
+      };
+
+      const removed_column_order = (
+        await client.query<{ workspace_column_order: number }>(sql)
+      ).rows[0]?.workspace_column_order;
+      if (removed_column_order === undefined) {
+        throw new NotFoundError(
+          `Workspace column with the given ID does not exist in this workspace.`,
+        );
+      }
+      sqlReindexColumns.values!.push(removed_column_order);
+
+      await client.query(sqlReindexColumns);
+      await client.query("COMMIT");
     } catch (err) {
+      await client.query("ROLLBACK");
+      if (err instanceof AppError) {
+        throw err;
+      }
       this.logger.error(err);
       throw new InternalServerError(
         `Database workspace column deletion error.`,
       );
+    } finally {
+      client.release();
     }
   }
 

@@ -132,15 +132,10 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
       );
     }
 
-    const isDeleted = await this.workspaceColumnRepo.deleteWorkspaceColumn(
+    await this.workspaceColumnRepo.deleteWorkspaceColumn(
       workspace_id,
       workspace_column_id,
     );
-    if (!isDeleted) {
-      throw new NotFoundError(
-        `Workspace column with the given ID does not exist in this workspace.`,
-      );
-    }
   }
 
   async updateWorkspaceColumnTitle(
