@@ -1,7 +1,7 @@
 import { FastifyBaseLogger } from "fastify";
 import { Pool, QueryConfig } from "pg";
-import { InternalServerError } from "@errors/appError.js";
-import { TaskResponse } from "@models/task.js";
+import { ConflictError, InternalServerError } from "@errors/appError.js";
+import { TaskCreation, TaskResponse } from "@models/task.js";
 
 export interface TaskRepository {
   /**
@@ -10,6 +10,13 @@ export interface TaskRepository {
    * @throws InternalServerError If there is an error during database retrieval.
    */
   findWorkspaceTasks(workspace_id: string): Promise<Array<TaskResponse>>;
+  /**
+   * Creates a task.
+   *
+   * @throws ConflictError If a task with the same order already exists in the workspace column.
+   * @throws InternalServerError If there is an error during database insertion.
+   */
+  createTask(payload: TaskCreation): Promise<TaskResponse>;
 }
 
 export class PostgreSQLTaskRepository implements TaskRepository {
@@ -34,6 +41,35 @@ export class PostgreSQLTaskRepository implements TaskRepository {
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database task lookup error.`);
+    }
+  }
+
+  async createTask(payload: TaskCreation) {
+    const sql: QueryConfig = {
+      text: `insert into task (workspace_column_id, title, description, priority, deadline, task_order)
+            values ($1, $2, $3, $4, $5, $6)
+            returning id, workspace_column_id as "workspaceColumnId", title,
+            description, priority, deadline, task_order as "taskOrder",
+            created_at as "createdAt"`,
+      values: [
+        payload.workspaceColumnId,
+        payload.title,
+        payload.description ?? null,
+        payload.priority,
+        payload.deadline ?? null,
+        payload.taskOrder,
+      ],
+    };
+    try {
+      return (await this.pool.query<TaskResponse>(sql)).rows[0];
+    } catch (err) {
+      if ((err as any).code === "23505") {
+        throw new ConflictError(
+          `A task with the same order already exists in this workspace column.`,
+        );
+      }
+      this.logger.error(err);
+      throw new InternalServerError(`Database task creation error.`);
     }
   }
 }

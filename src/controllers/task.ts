@@ -1,9 +1,17 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { TaskService } from "@services/task.js";
+import { TaskCreation } from "@models/task.js";
 
 export interface TaskController {
   getWorkspaceTasks(
     request: FastifyRequest<{ Params: { workspaceId: string } }>,
+    reply: FastifyReply,
+  ): Promise<void>;
+  createTask(
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Body: TaskCreation;
+    }>,
     reply: FastifyReply,
   ): Promise<void>;
 }
@@ -21,5 +29,21 @@ export class DefaultTaskController implements TaskController {
     );
 
     reply.code(200).send(tasks);
+  }
+
+  async createTask(
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Body: TaskCreation;
+    }>,
+    reply: FastifyReply,
+  ) {
+    const task = await this.taskService.createTask(
+      request.user.id,
+      request.params.workspaceId,
+      request.body,
+    );
+
+    reply.code(201).send(task);
   }
 }

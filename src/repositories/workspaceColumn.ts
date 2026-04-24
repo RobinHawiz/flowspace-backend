@@ -22,6 +22,15 @@ export interface WorkspaceColumnRepository {
     workspace_id: string,
   ): Promise<Array<WorkspaceColumnResponse>>;
   /**
+   * Checks if a workspace column with the given ID exists in the workspace.
+   *
+   * @throws InternalServerError If there is an error during database retrieval.
+   */
+  checkWorkspaceColumnExistance(
+    workspace_id: string,
+    workspace_column_id: number,
+  ): Promise<boolean>;
+  /**
    * Creates a workspace column.
    *
    * @throws ConflictError If a column with the same order already exists in this workspace.
@@ -96,6 +105,23 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
     };
     try {
       return (await this.pool.query<WorkspaceColumnResponse>(sql)).rows;
+    } catch (err) {
+      this.logger.error(err);
+      throw new InternalServerError(`Database workspace column lookup error.`);
+    }
+  }
+
+  async checkWorkspaceColumnExistance(
+    workspace_id: string,
+    workspace_column_id: number,
+  ) {
+    const sql: QueryConfig = {
+      text: `select 1 from workspace_column
+            where workspace_id = $1 and id = $2`,
+      values: [workspace_id, workspace_column_id],
+    };
+    try {
+      return (await this.pool.query(sql)).rows.length > 0;
     } catch (err) {
       this.logger.error(err);
       throw new InternalServerError(`Database workspace column lookup error.`);

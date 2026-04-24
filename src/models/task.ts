@@ -22,3 +22,12 @@ export type TaskResponse = Pick<
   | "taskOrder"
   | "createdAt"
 >;
+
+// Incoming payload for task creation.
+export type TaskCreation = Pick<
+  TaskEntity,
+  "workspaceColumnId" | "title" | "priority" | "taskOrder"
+> & {
+  description?: string | null;
+  deadline?: string | null;
+};
