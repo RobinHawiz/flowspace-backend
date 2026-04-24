@@ -6,21 +6,25 @@ import {
   DefaultAuthRoutes,
   DefaultWorkspaceRoutes,
   DefaultWorkspaceColumnRoutes,
+  DefaultTaskRoutes,
 } from "@routes/index.js";
 import {
   DefaultAuthController,
   DefaultWorkspaceController,
   DefaultWorkspaceColumnController,
+  DefaultTaskController,
 } from "@controllers/index.js";
 import {
   DefaultAuthService,
   DefaultWorkspaceService,
   DefaultWorkspaceColumnService,
+  DefaultTaskService,
 } from "@services/index.js";
 import {
   PostgreSQLAppUserRepository,
   PostgreSQLWorkspaceRepository,
   PostgreSQLWorkspaceColumnRepository,
+  PostgreSQLTaskRepository,
 } from "@repositories/index.js";
 
 export default function setupDI(logger: FastifyBaseLogger) {
@@ -51,5 +55,9 @@ export default function setupDI(logger: FastifyBaseLogger) {
     workspaceColumnRepo: asClass(PostgreSQLWorkspaceColumnRepository)
       .classic()
       .singleton(),
+    taskRoutes: asClass(DefaultTaskRoutes).classic().singleton(),
+    taskController: asClass(DefaultTaskController).classic().singleton(),
+    taskService: asClass(DefaultTaskService).classic().singleton(),
+    taskRepo: asClass(PostgreSQLTaskRepository).classic().singleton(),
   });
 }

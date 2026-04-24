@@ -4,21 +4,25 @@ import {
   AuthRoutes,
   WorkspaceRoutes,
   WorkspaceColumnRoutes,
+  TaskRoutes,
 } from "@routes/index.js";
 import {
   AuthController,
   WorkspaceController,
   WorkspaceColumnController,
+  TaskController,
 } from "@controllers/index.js";
 import {
   AuthService,
   WorkspaceService,
   WorkspaceColumnService,
+  TaskService,
 } from "@services/index.js";
 import {
   AppUserRepository,
   WorkspaceRepository,
   WorkspaceColumnRepository,
+  TaskRepository,
 } from "@repositories/index.js";
 import { AuthTokenPayload } from "@models/auth.js";
 
@@ -44,5 +48,9 @@ declare module "@fastify/awilix" {
     workspaceColumnController: WorkspaceColumnController;
     workspaceColumnService: WorkspaceColumnService;
     workspaceColumnRepo: WorkspaceColumnRepository;
+    taskRoutes: TaskRoutes;
+    taskController: TaskController;
+    taskService: TaskService;
+    taskRepo: TaskRepository;
   }
 }
