@@ -7,6 +7,10 @@ export class SchemaValidationError extends Error {
     readonly error: FastifySchemaValidationError,
     readonly dataVar: "params" | "headers" | "body" | "querystring",
   ) {
-    super(`${dataVar}${error.instancePath} ${error.message}`);
+    const params = Object.entries(error.params).map(
+      ([key, value]) => `[${key}: ${value}]`,
+    );
+
+    super(`${dataVar}${error.instancePath} ${error.message} ${params}`);
   }
 }
