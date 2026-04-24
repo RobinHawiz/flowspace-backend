@@ -1,6 +1,7 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS citext;
 
+DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS workspace_column;
 DROP TABLE IF EXISTS assigned_workspace_user;
 DROP TABLE IF EXISTS workspace;
@@ -38,6 +39,21 @@ workspace_column_order INT NOT NULL CHECK (workspace_column_order >= 0),
 FOREIGN KEY (workspace_id) REFERENCES workspace(id) ON DELETE CASCADE,
 CONSTRAINT unique_workspace_column_order
 UNIQUE (workspace_id, workspace_column_order)
+DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE task (
+id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+workspace_column_id INT NOT NULL,
+title VARCHAR(200) NOT NULL,
+description TEXT,
+priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
+deadline TIMESTAMPTZ,
+task_order INT NOT NULL CHECK (task_order >= 0),
+created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+FOREIGN KEY (workspace_column_id) REFERENCES workspace_column(id) ON DELETE CASCADE,
+CONSTRAINT unique_task_order
+UNIQUE (workspace_column_id, task_order)
 DEFERRABLE INITIALLY DEFERRED
 );
 
