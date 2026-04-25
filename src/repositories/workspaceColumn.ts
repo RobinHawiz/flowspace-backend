@@ -168,22 +168,21 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
         values: [workspace_id, workspace_column_id],
       };
 
-      const sqlReindexColumns: QueryConfig = {
-        text: `update workspace_column
-            set workspace_column_order = workspace_column_order - 1
-            where workspace_id = $1 and workspace_column_order > $2`,
-        values: [workspace_id],
-      };
-
-      const removed_column_order = (
+      const removedWorkspaceColumn = (
         await client.query<{ workspace_column_order: number }>(sql)
-      ).rows[0]?.workspace_column_order;
-      if (removed_column_order === undefined) {
+      ).rows[0];
+      if (!removedWorkspaceColumn) {
         throw new NotFoundError(
           `Workspace column with the given ID does not exist in this workspace.`,
         );
       }
-      sqlReindexColumns.values!.push(removed_column_order);
+
+      const sqlReindexColumns: QueryConfig = {
+        text: `update workspace_column
+            set workspace_column_order = workspace_column_order - 1
+            where workspace_id = $1 and workspace_column_order > $2`,
+        values: [workspace_id, removedWorkspaceColumn.workspace_column_order],
+      };
 
       await client.query(sqlReindexColumns);
       await client.query("COMMIT");
