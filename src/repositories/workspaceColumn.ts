@@ -259,10 +259,20 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
         await client.query(sqlReindexColumns);
       }
 
-      await client.query<{ id: string }>(sqlReindexSelectedColumn);
+      const result = await client.query<{ id: string }>(
+        sqlReindexSelectedColumn,
+      );
+      if (result.rows.length === 0) {
+        throw new NotFoundError(
+          `Workspace column with the given ID does not exist in this workspace.`,
+        );
+      }
       await client.query("COMMIT");
     } catch (err) {
       await client.query("ROLLBACK");
+      if (err instanceof AppError) {
+        throw err;
+      }
       if ((err as any).code === "23505") {
         throw new ConflictError(
           `A column with the same order already exists in this workspace.`,
