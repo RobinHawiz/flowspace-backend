@@ -37,3 +37,9 @@ export type TaskOrderUpdate = Pick<
   TaskEntity,
   "workspaceColumnId" | "taskOrder"
 >;
+
+// Incoming payload for task updates.
+export type TaskUpdate = Pick<TaskEntity, "title" | "priority"> & {
+  description?: string | null;
+  deadline?: string | null;
+};

@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { TaskService } from "@services/task.js";
-import { TaskCreation, TaskOrderUpdate } from "@models/task.js";
+import { TaskCreation, TaskOrderUpdate, TaskUpdate } from "@models/task.js";
 
 export interface TaskController {
   getWorkspaceTasks(
@@ -21,6 +21,16 @@ export interface TaskController {
         taskId: string;
       };
       Body: TaskOrderUpdate;
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
+  updateTask(
+    request: FastifyRequest<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+      Body: TaskUpdate;
     }>,
     reply: FastifyReply,
   ): Promise<void>;
@@ -78,6 +88,26 @@ export class DefaultTaskController implements TaskController {
     reply: FastifyReply,
   ) {
     await this.taskService.updateTaskOrder(
+      request.user.id,
+      request.params.workspaceId,
+      request.params.taskId,
+      request.body,
+    );
+
+    reply.code(204).send();
+  }
+
+  async updateTask(
+    request: FastifyRequest<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+      Body: TaskUpdate;
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.taskService.updateTask(
       request.user.id,
       request.params.workspaceId,
       request.params.taskId,

@@ -6,7 +6,7 @@ import {
   InternalServerError,
   NotFoundError,
 } from "@errors/appError.js";
-import { TaskCreation, TaskResponse } from "@models/task.js";
+import { TaskCreation, TaskResponse, TaskUpdate } from "@models/task.js";
 
 export interface TaskRepository {
   /**
@@ -49,6 +49,17 @@ export interface TaskRepository {
     current_task_order: number,
     new_task_order: number,
     task_order_difference: number,
+  ): Promise<void>;
+  /**
+   * Updates a task.
+   *
+   * @throws NotFoundError If the task does not exist in the workspace.
+   * @throws InternalServerError If there is an error during database update.
+   */
+  updateTask(
+    workspace_id: string,
+    task_id: string,
+    payload: TaskUpdate,
   ): Promise<void>;
   /**
    * Deletes a task and reindexes the subsequent tasks in the same workspace column.
@@ -210,6 +221,40 @@ export class PostgreSQLTaskRepository implements TaskRepository {
       throw new InternalServerError(`Database task update error.`);
     } finally {
       client.release();
+    }
+  }
+
+  async updateTask(workspace_id: string, task_id: string, payload: TaskUpdate) {
+    const sql: QueryConfig = {
+      text: `update task t
+            set title = $1, description = $2, priority = $3, deadline = $4
+            from workspace_column wc
+            where t.workspace_column_id = wc.id
+            and wc.workspace_id = $5
+            and t.id = $6
+            returning t.id`,
+      values: [
+        payload.title,
+        payload.description ?? null,
+        payload.priority,
+        payload.deadline ?? null,
+        workspace_id,
+        task_id,
+      ],
+    };
+    try {
+      const result = await this.pool.query<{ id: string }>(sql);
+      if (result.rows.length === 0) {
+        throw new NotFoundError(
+          `Task with the given ID does not exist in this workspace.`,
+        );
+      }
+    } catch (err) {
+      if (err instanceof AppError) {
+        throw err;
+      }
+      this.logger.error(err);
+      throw new InternalServerError(`Database task update error.`);
     }
   }
 

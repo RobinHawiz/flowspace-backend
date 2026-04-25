@@ -3,7 +3,12 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@errors/appError.js";
-import { TaskCreation, TaskOrderUpdate, TaskResponse } from "@models/task.js";
+import {
+  TaskCreation,
+  TaskOrderUpdate,
+  TaskResponse,
+  TaskUpdate,
+} from "@models/task.js";
 import {
   TaskRepository,
   WorkspaceColumnRepository,
@@ -34,6 +39,15 @@ export interface TaskService {
     workspace_id: string,
     task_id: string,
     payload: TaskOrderUpdate,
+  ): Promise<void>;
+  /**
+   * Updates a task. Only users with access to the workspace can perform this action.
+   */
+  updateTask(
+    app_user_id: number,
+    workspace_id: string,
+    task_id: string,
+    payload: TaskUpdate,
   ): Promise<void>;
   /**
    * Deletes a task. Only users with access to the workspace can perform this action.
@@ -169,6 +183,31 @@ export class DefaultTaskService implements TaskService {
       newTaskOrder,
       taskOrderDifference,
     );
+  }
+
+  async updateTask(
+    app_user_id: number,
+    workspace_id: string,
+    task_id: string,
+    payload: TaskUpdate,
+  ) {
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    await this.taskRepo.updateTask(workspace_id, task_id, payload);
   }
 
   async deleteTask(app_user_id: number, workspace_id: string, task_id: string) {
