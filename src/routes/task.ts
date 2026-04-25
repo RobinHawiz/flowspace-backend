@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify";
 import authenticateToken from "@hooks/authenticateToken.js";
 import { TaskController } from "@controllers/task.js";
-import { TaskCreation } from "@models/task.js";
-import { taskCreationSchema } from "@schemas/task.js";
+import { TaskCreation, TaskOrderUpdate } from "@models/task.js";
+import { taskCreationSchema, taskOrderUpdateSchema } from "@schemas/task.js";
 
 export interface TaskRoutes {
   initRoutes(app: FastifyInstance): void;
@@ -39,6 +39,26 @@ export class DefaultTaskRoutes implements TaskRoutes {
       },
       async (request, reply) => {
         await this.taskController.createTask(request, reply);
+      },
+    );
+
+    // Update task order.
+    app.patch<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+      Body: TaskOrderUpdate;
+    }>(
+      "/api/workspaces/:workspaceId/tasks/:taskId/order",
+      {
+        onRequest: authenticateToken,
+        schema: {
+          body: taskOrderUpdateSchema,
+        },
+      },
+      async (request, reply) => {
+        await this.taskController.updateTaskOrder(request, reply);
       },
     );
   }

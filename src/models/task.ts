@@ -31,3 +31,9 @@ export type TaskCreation = Pick<
   description?: string | null;
   deadline?: string | null;
 };
+
+// Incoming payload for task order update.
+export type TaskOrderUpdate = Pick<
+  TaskEntity,
+  "workspaceColumnId" | "taskOrder"
+>;

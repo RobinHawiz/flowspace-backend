@@ -1,5 +1,5 @@
 import { JSONSchemaType } from "ajv";
-import { TaskCreation } from "@models/task.js";
+import { TaskCreation, TaskOrderUpdate } from "@models/task.js";
 
 /**
  * Validation schema for task creation.
@@ -27,5 +27,22 @@ export const taskCreationSchema: JSONSchemaType<TaskCreation> = {
     taskOrder: { type: "integer", minimum: 0 },
   },
   required: ["workspaceColumnId", "title", "priority", "taskOrder"],
+  additionalProperties: false,
+};
+
+/**
+ * Validation schema for task order updates.
+ *
+ * Validates the request body to ensure required fields are present and formatted correctly:
+ * - `workspaceColumnId`: integer.
+ * - `taskOrder`: non-negative integer.
+ */
+export const taskOrderUpdateSchema: JSONSchemaType<TaskOrderUpdate> = {
+  type: "object",
+  properties: {
+    workspaceColumnId: { type: "integer" },
+    taskOrder: { type: "integer", minimum: 0 },
+  },
+  required: ["workspaceColumnId", "taskOrder"],
   additionalProperties: false,
 };
