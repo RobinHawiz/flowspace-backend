@@ -24,6 +24,15 @@ export interface TaskController {
     }>,
     reply: FastifyReply,
   ): Promise<void>;
+  deleteTask(
+    request: FastifyRequest<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
 }
 
 export class DefaultTaskController implements TaskController {
@@ -73,6 +82,24 @@ export class DefaultTaskController implements TaskController {
       request.params.workspaceId,
       request.params.taskId,
       request.body,
+    );
+
+    reply.code(204).send();
+  }
+
+  async deleteTask(
+    request: FastifyRequest<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.taskService.deleteTask(
+      request.user.id,
+      request.params.workspaceId,
+      request.params.taskId,
     );
 
     reply.code(204).send();

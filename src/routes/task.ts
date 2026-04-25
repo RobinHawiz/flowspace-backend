@@ -61,5 +61,21 @@ export class DefaultTaskRoutes implements TaskRoutes {
         await this.taskController.updateTaskOrder(request, reply);
       },
     );
+
+    // Delete task.
+    app.delete<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+    }>(
+      "/api/workspaces/:workspaceId/tasks/:taskId",
+      {
+        onRequest: authenticateToken,
+      },
+      async (request, reply) => {
+        await this.taskController.deleteTask(request, reply);
+      },
+    );
   }
 }

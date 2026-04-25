@@ -50,6 +50,13 @@ export interface TaskRepository {
     new_task_order: number,
     task_order_difference: number,
   ): Promise<void>;
+  /**
+   * Deletes a task and reindexes the subsequent tasks in the same workspace column.
+   *
+   * @throws NotFoundError If the task does not exist in the workspace.
+   * @throws InternalServerError If there is an error during database deletion.
+   */
+  deleteTask(workspace_id: string, task_id: string): Promise<void>;
 }
 
 export class PostgreSQLTaskRepository implements TaskRepository {
@@ -201,6 +208,53 @@ export class PostgreSQLTaskRepository implements TaskRepository {
       }
       this.logger.error(err);
       throw new InternalServerError(`Database task update error.`);
+    } finally {
+      client.release();
+    }
+  }
+
+  async deleteTask(workspace_id: string, task_id: string) {
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const sql: QueryConfig = {
+        text: `delete from task t
+            using workspace_column wc
+            where t.workspace_column_id = wc.id
+            and wc.workspace_id = $1
+            and t.id = $2
+            returning t.workspace_column_id as "workspaceColumnId", t.task_order as "taskOrder"`,
+        values: [workspace_id, task_id],
+      };
+
+      const removedTask = (
+        await client.query<{ workspaceColumnId: number; taskOrder: number }>(
+          sql,
+        )
+      ).rows[0];
+      if (!removedTask) {
+        throw new NotFoundError(
+          `Task with the given ID does not exist in this workspace.`,
+        );
+      }
+
+      const sqlReindexTasks: QueryConfig = {
+        text: `update task
+            set task_order = task_order - 1
+            where workspace_column_id = $1 and task_order > $2`,
+        values: [removedTask.workspaceColumnId, removedTask.taskOrder],
+      };
+
+      await client.query(sqlReindexTasks);
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      if (err instanceof AppError) {
+        throw err;
+      }
+      this.logger.error(err);
+      throw new InternalServerError(`Database task deletion error.`);
     } finally {
       client.release();
     }

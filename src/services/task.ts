@@ -35,6 +35,14 @@ export interface TaskService {
     task_id: string,
     payload: TaskOrderUpdate,
   ): Promise<void>;
+  /**
+   * Deletes a task. Only users with access to the workspace can perform this action.
+   */
+  deleteTask(
+    app_user_id: number,
+    workspace_id: string,
+    task_id: string,
+  ): Promise<void>;
 }
 
 export class DefaultTaskService implements TaskService {
@@ -161,5 +169,25 @@ export class DefaultTaskService implements TaskService {
       newTaskOrder,
       taskOrderDifference,
     );
+  }
+
+  async deleteTask(app_user_id: number, workspace_id: string, task_id: string) {
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    await this.taskRepo.deleteTask(workspace_id, task_id);
   }
 }
