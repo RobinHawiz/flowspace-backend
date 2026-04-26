@@ -1,6 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { TaskService } from "@services/task.js";
-import { TaskCreation, TaskOrderUpdate, TaskUpdate } from "@models/task.js";
+import {
+  TaskCreation,
+  TaskMoveUpdate,
+  TaskOrderUpdate,
+  TaskUpdate,
+} from "@models/task.js";
 
 export interface TaskController {
   getWorkspaceTasks(
@@ -40,6 +45,16 @@ export interface TaskController {
         workspaceId: string;
         taskId: string;
       };
+    }>,
+    reply: FastifyReply,
+  ): Promise<void>;
+  moveTaskToDifferentColumn(
+    request: FastifyRequest<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+      Body: TaskMoveUpdate;
     }>,
     reply: FastifyReply,
   ): Promise<void>;
@@ -130,6 +145,26 @@ export class DefaultTaskController implements TaskController {
       request.user.id,
       request.params.workspaceId,
       request.params.taskId,
+    );
+
+    reply.code(204).send();
+  }
+
+  async moveTaskToDifferentColumn(
+    request: FastifyRequest<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+      Body: TaskMoveUpdate;
+    }>,
+    reply: FastifyReply,
+  ) {
+    await this.taskService.moveTaskToDifferentColumn(
+      request.user.id,
+      request.params.workspaceId,
+      request.params.taskId,
+      request.body,
     );
 
     reply.code(204).send();

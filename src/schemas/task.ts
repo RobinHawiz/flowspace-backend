@@ -1,5 +1,10 @@
 import { JSONSchemaType } from "ajv";
-import { TaskCreation, TaskOrderUpdate, TaskUpdate } from "@models/task.js";
+import {
+  TaskCreation,
+  TaskMoveUpdate,
+  TaskOrderUpdate,
+  TaskUpdate,
+} from "@models/task.js";
 
 /**
  * Validation schema for task creation.
@@ -69,5 +74,16 @@ export const taskUpdateSchema: JSONSchemaType<TaskUpdate> = {
     },
   },
   required: ["title", "priority"],
+  additionalProperties: false,
+};
+
+export const taskMoveUpdateSchema: JSONSchemaType<TaskMoveUpdate> = {
+  type: "object",
+  properties: {
+    workspaceColumnId: { type: "integer" },
+    newWorkspaceColumnId: { type: "integer" },
+    newTaskOrder: { type: "integer", minimum: 0 },
+  },
+  required: ["workspaceColumnId", "newWorkspaceColumnId", "newTaskOrder"],
   additionalProperties: false,
 };

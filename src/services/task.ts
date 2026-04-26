@@ -5,6 +5,7 @@ import {
 } from "@errors/appError.js";
 import {
   TaskCreation,
+  TaskMoveUpdate,
   TaskOrderUpdate,
   TaskResponse,
   TaskUpdate,
@@ -56,6 +57,15 @@ export interface TaskService {
     app_user_id: number,
     workspace_id: string,
     task_id: string,
+  ): Promise<void>;
+  /**
+   * Moves a task to a different workspace column. Only users with access to the workspace can perform this action.
+   */
+  moveTaskToDifferentColumn(
+    app_user_id: number,
+    workspace_id: string,
+    task_id: string,
+    payload: TaskMoveUpdate,
   ): Promise<void>;
 }
 
@@ -169,7 +179,7 @@ export class DefaultTaskService implements TaskService {
     const largestTaskOrder =
       await this.taskRepo.findLargestTaskOrder(workspace_column_id);
     const newTaskOrder = payload.taskOrder;
-    if (newTaskOrder > largestTaskOrder) {
+    if (newTaskOrder > (largestTaskOrder ?? 0)) {
       throw new BadRequestError(
         `The new task order ${newTaskOrder} exceeds the largest task order ${largestTaskOrder} in this workspace column.`,
       );
@@ -228,5 +238,90 @@ export class DefaultTaskService implements TaskService {
     }
 
     await this.taskRepo.deleteTask(workspace_id, task_id);
+  }
+
+  async moveTaskToDifferentColumn(
+    app_user_id: number,
+    workspace_id: string,
+    task_id: string,
+    payload: TaskMoveUpdate,
+  ) {
+    if (payload.workspaceColumnId === payload.newWorkspaceColumnId) {
+      throw new BadRequestError(
+        `The current workspace column ID [${payload.workspaceColumnId}] and the new workspace column ID [${payload.newWorkspaceColumnId}] cannot be the same.`,
+      );
+    }
+
+    const workspaceExists =
+      await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
+    if (!workspaceExists) {
+      throw new NotFoundError(`Workspace with the given ID does not exist.`);
+    }
+
+    const result = await this.workspaceRepo.findCurrentAppUserWorkspace(
+      app_user_id,
+      workspace_id,
+    );
+    if (!result) {
+      throw new ForbiddenError(
+        `Current app user does not have access to this workspace.`,
+      );
+    }
+
+    const currentWorkspaceColumnExists =
+      await this.workspaceColumnRepo.checkWorkspaceColumnExistance(
+        workspace_id,
+        payload.workspaceColumnId,
+      );
+    if (!currentWorkspaceColumnExists) {
+      throw new NotFoundError(
+        `Current workspace column with the given ID does not exist in this workspace.`,
+      );
+    }
+
+    const newWorkspaceColumnExists =
+      await this.workspaceColumnRepo.checkWorkspaceColumnExistance(
+        workspace_id,
+        payload.newWorkspaceColumnId,
+      );
+    if (!newWorkspaceColumnExists) {
+      throw new NotFoundError(
+        `New workspace column with the given ID does not exist in this workspace.`,
+      );
+    }
+
+    const currentTaskOrder = await this.taskRepo.findTaskOrder(
+      payload.workspaceColumnId.toString(),
+      task_id,
+    );
+    if (currentTaskOrder === null) {
+      throw new NotFoundError(
+        `Task with the given ID does not exist in this workspace column.`,
+      );
+    }
+
+    const largestTaskOrder = await this.taskRepo.findLargestTaskOrder(
+      payload.newWorkspaceColumnId.toString(),
+    );
+    const newTaskOrder = payload.newTaskOrder;
+    if (largestTaskOrder === null && newTaskOrder > 0) {
+      throw new BadRequestError(
+        `The new task order [${newTaskOrder}] cannot be greater than 0 since there are no tasks in the new workspace column.`,
+      );
+    }
+    if (newTaskOrder > (largestTaskOrder ?? 0) + 1) {
+      throw new BadRequestError(
+        `The new task order [${newTaskOrder}] exceeds the largest task order [${largestTaskOrder}] by more than 1 [newTaskOrder - largestTaskOrder = ${newTaskOrder - (largestTaskOrder ?? 0)}] in this workspace column.`,
+      );
+    }
+
+    await this.taskRepo.moveTaskToDifferentColumn(
+      workspace_id,
+      task_id,
+      currentTaskOrder,
+      payload.workspaceColumnId,
+      payload.newTaskOrder,
+      payload.newWorkspaceColumnId,
+    );
   }
 }

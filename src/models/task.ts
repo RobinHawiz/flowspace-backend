@@ -43,3 +43,8 @@ export type TaskUpdate = Pick<TaskEntity, "title" | "priority"> & {
   description?: string | null;
   deadline?: string | null;
 };
+
+export type TaskMoveUpdate = Pick<TaskEntity, "workspaceColumnId"> & {
+  newWorkspaceColumnId: number;
+  newTaskOrder: number;
+};

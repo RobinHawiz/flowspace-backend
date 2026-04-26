@@ -1,11 +1,17 @@
 import { FastifyInstance } from "fastify";
 import authenticateToken from "@hooks/authenticateToken.js";
 import { TaskController } from "@controllers/task.js";
-import { TaskCreation, TaskOrderUpdate, TaskUpdate } from "@models/task.js";
+import {
+  TaskCreation,
+  TaskMoveUpdate,
+  TaskOrderUpdate,
+  TaskUpdate,
+} from "@models/task.js";
 import {
   taskCreationSchema,
   taskOrderUpdateSchema,
   taskUpdateSchema,
+  taskMoveUpdateSchema,
 } from "@schemas/task.js";
 
 export interface TaskRoutes {
@@ -99,6 +105,26 @@ export class DefaultTaskRoutes implements TaskRoutes {
       },
       async (request, reply) => {
         await this.taskController.deleteTask(request, reply);
+      },
+    );
+
+    // Move task to a different column.
+    app.patch<{
+      Params: {
+        workspaceId: string;
+        taskId: string;
+      };
+      Body: TaskMoveUpdate;
+    }>(
+      "/api/workspaces/:workspaceId/tasks/:taskId/move",
+      {
+        onRequest: authenticateToken,
+        schema: {
+          body: taskMoveUpdateSchema,
+        },
+      },
+      async (request, reply) => {
+        await this.taskController.moveTaskToDifferentColumn(request, reply);
       },
     );
   }
