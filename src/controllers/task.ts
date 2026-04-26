@@ -95,7 +95,6 @@ export class DefaultTaskController implements TaskController {
     request: FastifyRequest<{
       Params: {
         workspaceId: string;
-        workspaceColumnId: string;
         taskId: string;
       };
       Body: TaskOrderUpdate;
