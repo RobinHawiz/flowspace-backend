@@ -33,7 +33,9 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.4",
     "fastify": "^5.7.4",
+    "fastify-plugin": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "socket.io": "^4.8.3"
   }
 }

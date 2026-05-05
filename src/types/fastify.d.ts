@@ -25,6 +25,14 @@ import {
   TaskRepository,
 } from "@repositories/index.js";
 import { AuthTokenPayload } from "@models/auth.js";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData,
+} from "@customTypes/socket.io.js";
+import { Server } from "socket.io";
+import { Publisher } from "@src/realtime/publisher.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -36,6 +44,13 @@ declare module "@fastify/awilix" {
   interface Cradle {
     logger: FastifyBaseLogger;
     pool: Pool;
+    io: Server<
+      ClientToServerEvents,
+      ServerToClientEvents,
+      InterServerEvents,
+      SocketData
+    >;
+    publisher: Publisher;
     authRoutes: AuthRoutes;
     authController: AuthController;
     authService: AuthService;

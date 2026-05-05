@@ -13,13 +13,16 @@
       "@utils/*": ["./src/utils/*"],
       "@config/*": ["./src/config/*"],
       "@models/*": ["./src/models/*"],
+      "@plugins/*": ["./src/plugins/*"],
       "@schemas/*": ["./src/schemas/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@errors/*": ["./src/errors/*"],
       "@routes/*": ["./src/routes/*"],
       "@controllers/*": ["./src/controllers/*"],
       "@services/*": ["./src/services/*"],
+      "@realtime/*": ["./src/realtime/*"],
       "@repositories/*": ["./src/repositories/*"],
+      "@customTypes/*": ["./src/types/*"],
       "@/*": ["./src/*"]
     },
 

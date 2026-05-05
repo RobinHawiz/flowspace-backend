@@ -4,6 +4,8 @@ import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import { AppError } from "@errors/appError.js";
 import { SchemaValidationError } from "@errors/schemaValidationError.js";
+import setupDI from "@config/setupDI.js";
+import { corsOptions } from "@config/cors.js";
 
 function isFastifyError(err: unknown): err is FastifyError {
   return (
@@ -35,12 +37,7 @@ function createLogger() {
 export default async function build() {
   const app = Fastify({ logger: createLogger() });
 
-  await app.register(cors, {
-    origin: process.env.CORS_ORIGINS,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    exposedHeaders: ["Location"],
-  });
+  await app.register(cors, corsOptions);
 
   await app.register(fastifyAwilixPlugin, { disposeOnClose: true });
 
@@ -88,6 +85,13 @@ export default async function build() {
       reply.code(500).send({ message: "Unexpected server error" });
     }
   });
+
+  setupDI(app.log, app.server, corsOptions);
+
+  app.diContainer.cradle.authRoutes.initRoutes(app);
+  app.diContainer.cradle.workspaceRoutes.initRoutes(app);
+  app.diContainer.cradle.workspaceColumnRoutes.initRoutes(app);
+  app.diContainer.cradle.taskRoutes.initRoutes(app);
 
   return app;
 }
