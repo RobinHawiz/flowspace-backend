@@ -16,8 +16,24 @@ function isFastifyError(err: unknown): err is FastifyError {
   );
 }
 
+function createLogger() {
+  if (process.env.NODE_ENV === "production") {
+    return true;
+  }
+
+  return {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        ignore: "pid,hostname",
+      },
+    },
+  };
+}
+
 export default async function build() {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: createLogger() });
 
   await app.register(cors, {
     origin: process.env.CORS_ORIGINS,
