@@ -1,6 +1,5 @@
 import {
   WorkspaceCreation,
-  WorkspaceEntity,
   WorkspaceResponse,
   WorkspaceMemberResponse,
 } from "@models/workspace.js";
@@ -26,7 +25,7 @@ export interface WorkspaceService {
   createWorkspace(
     app_user_id: number,
     payload: WorkspaceCreation,
-  ): Promise<WorkspaceEntity>;
+  ): Promise<WorkspaceResponse>;
 
   /**
    * Updates the title of a workspace. Only users with an admin role in the workspace can perform this action.

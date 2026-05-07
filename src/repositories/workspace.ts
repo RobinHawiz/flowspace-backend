@@ -39,7 +39,7 @@ export interface WorkspaceRepository {
   createWorkspace(
     app_user_id: number,
     payload: WorkspaceCreation,
-  ): Promise<WorkspaceEntity>;
+  ): Promise<WorkspaceResponse>;
   /**
    * Updates the title of a workspace.
    *
