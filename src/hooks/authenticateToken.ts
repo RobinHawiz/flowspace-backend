@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { AppError, UnauthorizedError } from "@/errors/appError.js";
 import { AuthTokenPayload } from "@models/auth.js";
 
-function isAuthTokenPayload(
+export function isAuthTokenPayload(
   payload: AuthTokenPayload | JwtPayload | string,
 ): payload is AuthTokenPayload {
   return (

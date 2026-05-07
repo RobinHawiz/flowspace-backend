@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { WorkspaceService } from "@services/workspace.js";
 import { WorkspaceCreation } from "@models/workspace.js";
+import { Publisher } from "@realtime/publisher.js";
 
 export interface WorkspaceController {
   getWorkspaces(request: FastifyRequest, reply: FastifyReply): Promise<void>;
@@ -43,7 +44,10 @@ export interface WorkspaceController {
 }
 
 export class DefaultWorkspaceController implements WorkspaceController {
-  constructor(private readonly workspaceService: WorkspaceService) {}
+  constructor(
+    private readonly workspaceService: WorkspaceService,
+    private readonly publisher: Publisher,
+  ) {}
 
   async getWorkspaces(request: FastifyRequest, reply: FastifyReply) {
     const workspaces = await this.workspaceService.getWorkspaces(
@@ -64,7 +68,10 @@ export class DefaultWorkspaceController implements WorkspaceController {
   }
 
   async createWorkspace(
-    request: FastifyRequest<{ Body: WorkspaceCreation }>,
+    request: FastifyRequest<{
+      Body: WorkspaceCreation;
+      Headers: { "x-client-request-id": string };
+    }>,
     reply: FastifyReply,
   ) {
     const workspace = await this.workspaceService.createWorkspace(
@@ -72,12 +79,22 @@ export class DefaultWorkspaceController implements WorkspaceController {
       request.body,
     );
     reply.code(201).send(workspace);
+
+    const clientRequestId = request.headers["x-client-request-id"];
+    if (clientRequestId) {
+      this.publisher.emitCreateWorkspace(
+        request.user.id,
+        workspace,
+        clientRequestId,
+      );
+    }
   }
 
   async updateWorkspaceTitle(
     request: FastifyRequest<{
       Params: { workspaceId: string };
       Body: { title: string };
+      Headers: { "x-client-request-id": string };
     }>,
     reply: FastifyReply,
   ) {
@@ -86,20 +103,40 @@ export class DefaultWorkspaceController implements WorkspaceController {
       request.params.workspaceId,
       request.body.title,
     );
-
     reply.code(204).send();
+
+    const clientRequestId = request.headers["x-client-request-id"];
+    if (clientRequestId) {
+      this.publisher.emitUpdateWorkspace(
+        request.user.id,
+        Number(request.params.workspaceId),
+        request.body.title,
+        clientRequestId,
+      );
+    }
   }
 
   async deleteWorkspace(
-    request: FastifyRequest<{ Params: { workspaceId: string } }>,
+    request: FastifyRequest<{
+      Params: { workspaceId: string };
+      Headers: { "x-client-request-id": string };
+    }>,
     reply: FastifyReply,
   ) {
     await this.workspaceService.deleteWorkspace(
       request.user.id,
       request.params.workspaceId,
     );
-
     reply.code(204).send();
+
+    const clientRequestId = request.headers["x-client-request-id"];
+    if (clientRequestId) {
+      this.publisher.emitDeleteWorkspace(
+        request.user.id,
+        Number(request.params.workspaceId),
+        clientRequestId,
+      );
+    }
   }
 
   async getWorkspaceMembers(

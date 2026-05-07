@@ -6,6 +6,7 @@ import createWebSocket from "@config/webSocket.js";
 import { CorsOptions } from "@config/cors.js";
 import { Server } from "http";
 import DefaultPublisher from "@realtime/publisher.js";
+import DefaultSubscriber from "@realtime/subscriber.js";
 import {
   DefaultAuthRoutes,
   DefaultWorkspaceRoutes,
@@ -45,6 +46,7 @@ export default function setupDI(
       .singleton()
       .disposer((io) => io.close()),
     publisher: asClass(DefaultPublisher).classic().singleton(),
+    subscriber: asClass(DefaultSubscriber).classic().singleton(),
     authRoutes: asClass(DefaultAuthRoutes).classic().singleton(),
     authController: asClass(DefaultAuthController).classic().singleton(),
     authService: asClass(DefaultAuthService).classic().singleton(),

@@ -32,7 +32,8 @@ import {
   SocketData,
 } from "@customTypes/socket.io.js";
 import { Server } from "socket.io";
-import { Publisher } from "@src/realtime/publisher.js";
+import { Publisher } from "@realtime/publisher.js";
+import { Subscriber } from "@realtime/subscriber.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -51,6 +52,7 @@ declare module "@fastify/awilix" {
       SocketData
     >;
     publisher: Publisher;
+    subscriber: Subscriber;
     authRoutes: AuthRoutes;
     authController: AuthController;
     authService: AuthService;

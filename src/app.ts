@@ -24,6 +24,7 @@ function createLogger() {
   }
 
   return {
+    level: "debug",
     transport: {
       target: "pino-pretty",
       options: {
@@ -92,6 +93,9 @@ export default async function build() {
   app.diContainer.cradle.workspaceRoutes.initRoutes(app);
   app.diContainer.cradle.workspaceColumnRoutes.initRoutes(app);
   app.diContainer.cradle.taskRoutes.initRoutes(app);
+
+  // Instantiate the subscriber to set up WebSocket event listeners
+  app.diContainer.cradle.subscriber;
 
   return app;
 }

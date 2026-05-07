@@ -1,20 +1,73 @@
 import { Server } from "socket.io";
-import { ServerToClientEvents } from "@customTypes/socket.io.js";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData,
+} from "@customTypes/socket.io.js";
+import { WorkspaceResponse } from "@models/workspace.js";
 
-export interface Publisher {}
+export interface Publisher {
+  emitCreateWorkspace(
+    appUserId: number,
+    workspace: WorkspaceResponse,
+    clientRequestId: string,
+  ): void;
+
+  emitUpdateWorkspace(
+    appUserId: number,
+    workspaceId: number,
+    workspaceTitle: string,
+    clientRequestId: string,
+  ): void;
+
+  emitDeleteWorkspace(
+    appUserId: number,
+    workspaceId: number,
+    clientRequestId: string,
+  ): void;
+}
 
 export default class DefaultPublisher implements Publisher {
-  constructor(private readonly io: Server<ServerToClientEvents>) {
-    this.io.on("connection", (socket) => {
-      console.log("A client connected:", socket.id);
+  constructor(
+    private readonly io: Server<
+      ClientToServerEvents,
+      ServerToClientEvents,
+      InterServerEvents,
+      SocketData
+    >,
+  ) {}
 
-      socket.on("disconnect", () => {
-        console.log("A client disconnected:", socket.id);
-      });
-    });
+  emitCreateWorkspace(
+    appUserId: number,
+    workspace: WorkspaceResponse,
+    clientRequestId: string,
+  ) {
+    this.io
+      .to(`user:${appUserId}`)
+      .emit("workspace:created", workspace, clientRequestId);
   }
 
-  // TODO: Figure out how to emit to specific users instead of all connected clients
+  emitUpdateWorkspace(
+    appUserId: number,
+    workspaceId: number,
+    workspaceTitle: string,
+    clientRequestId: string,
+  ) {
+    this.io
+      .to(`workspace:${workspaceId}`)
+      .to(`user:${appUserId}`)
+      .emit("workspace:updated", workspaceId, workspaceTitle, clientRequestId);
+  }
 
-  // TODO: Implement methods for emitting events
+  emitDeleteWorkspace(
+    appUserId: number,
+    workspaceId: number,
+    clientRequestId: string,
+  ) {
+    this.io
+      .to(`workspace:${workspaceId}`)
+      .to(`user:${appUserId}`)
+      .emit("workspace:deleted", workspaceId, clientRequestId);
+  }
 }
