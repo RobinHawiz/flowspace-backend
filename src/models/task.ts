@@ -1,7 +1,7 @@
-// Full task entry stored in the database.
+// Full task entry used by the application.
 export type TaskEntity = {
-  id: number;
-  workspaceColumnId: number;
+  id: string;
+  workspaceColumnId: string;
   title: string;
   description: string | null;
   priority: "low" | "medium" | "high";
@@ -45,6 +45,6 @@ export type TaskUpdate = Pick<TaskEntity, "title" | "priority"> & {
 };
 
 export type TaskMoveUpdate = Pick<TaskEntity, "workspaceColumnId"> & {
-  newWorkspaceColumnId: number;
+  newWorkspaceColumnId: string;
   newTaskOrder: number;
 };

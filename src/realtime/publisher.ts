@@ -9,21 +9,21 @@ import { WorkspaceResponse } from "@models/workspace.js";
 
 export interface Publisher {
   emitCreateWorkspace(
-    appUserId: number,
+    appUserId: string,
     workspace: WorkspaceResponse,
     clientRequestId: string,
   ): void;
 
   emitUpdateWorkspace(
-    appUserId: number,
-    workspaceId: number,
+    appUserId: string,
+    workspaceId: string,
     workspaceTitle: string,
     clientRequestId: string,
   ): void;
 
   emitDeleteWorkspace(
-    appUserId: number,
-    workspaceId: number,
+    appUserId: string,
+    workspaceId: string,
     clientRequestId: string,
   ): void;
 }
@@ -39,7 +39,7 @@ export default class DefaultPublisher implements Publisher {
   ) {}
 
   emitCreateWorkspace(
-    appUserId: number,
+    appUserId: string,
     workspace: WorkspaceResponse,
     clientRequestId: string,
   ) {
@@ -49,8 +49,8 @@ export default class DefaultPublisher implements Publisher {
   }
 
   emitUpdateWorkspace(
-    appUserId: number,
-    workspaceId: number,
+    appUserId: string,
+    workspaceId: string,
     workspaceTitle: string,
     clientRequestId: string,
   ) {
@@ -61,8 +61,8 @@ export default class DefaultPublisher implements Publisher {
   }
 
   emitDeleteWorkspace(
-    appUserId: number,
-    workspaceId: number,
+    appUserId: string,
+    workspaceId: string,
     clientRequestId: string,
   ) {
     this.io

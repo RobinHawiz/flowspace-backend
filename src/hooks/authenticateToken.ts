@@ -10,7 +10,7 @@ export function isAuthTokenPayload(
     typeof payload === "object" &&
     payload !== null &&
     "id" in payload &&
-    typeof payload.id === "number"
+    typeof payload.id === "string"
   );
 }
 

@@ -1,5 +1,5 @@
 export type AuthTokenPayload = {
-  id: number;
+  id: string;
 };
 
 export type AuthTokenResponse = {

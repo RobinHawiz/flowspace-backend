@@ -1,8 +1,8 @@
 import { AppUserEntity } from "@models/appUser.js";
 
-// Full workspace entry stored in the database.
+// Full workspace entry used by the application.
 export type WorkspaceEntity = {
-  id: number;
+  id: string;
   title: string;
 };
 

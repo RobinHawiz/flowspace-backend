@@ -109,7 +109,7 @@ export class DefaultWorkspaceController implements WorkspaceController {
     if (clientRequestId) {
       this.publisher.emitUpdateWorkspace(
         request.user.id,
-        Number(request.params.workspaceId),
+        request.params.workspaceId,
         request.body.title,
         clientRequestId,
       );
@@ -133,7 +133,7 @@ export class DefaultWorkspaceController implements WorkspaceController {
     if (clientRequestId) {
       this.publisher.emitDeleteWorkspace(
         request.user.id,
-        Number(request.params.workspaceId),
+        request.params.workspaceId,
         clientRequestId,
       );
     }

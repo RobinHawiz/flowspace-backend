@@ -79,9 +79,9 @@ export interface TaskRepository {
     workspace_id: string,
     task_id: string,
     prev_task_order: number,
-    prev_workspace_column_id: number,
+    prev_workspace_column_id: string,
     new_task_order: number,
-    new_workspace_column_id: number,
+    new_workspace_column_id: string,
   ): Promise<void>;
 }
 
@@ -93,7 +93,7 @@ export class PostgreSQLTaskRepository implements TaskRepository {
 
   async findWorkspaceTasks(workspace_id: string) {
     const sql: QueryConfig = {
-      text: `select t.id, t.workspace_column_id as "workspaceColumnId", t.title,
+      text: `select t.id::text as id, t.workspace_column_id::text as "workspaceColumnId", t.title,
             t.description, t.priority, t.deadline, t.task_order as "taskOrder",
             t.created_at as "createdAt"
             from task t
@@ -114,7 +114,7 @@ export class PostgreSQLTaskRepository implements TaskRepository {
     const sql: QueryConfig = {
       text: `insert into task (workspace_column_id, title, description, priority, deadline, task_order)
             values ($1, $2, $3, $4, $5, $6)
-            returning id, workspace_column_id as "workspaceColumnId", title,
+            returning id::text as id, workspace_column_id::text as "workspaceColumnId", title,
             description, priority, deadline, task_order as "taskOrder",
             created_at as "createdAt"`,
       values: [
@@ -207,7 +207,7 @@ export class PostgreSQLTaskRepository implements TaskRepository {
         text: `update task
             set task_order = $1
             where workspace_column_id = $2 and id = $3
-            returning id`,
+            returning id::text as id`,
         values: [new_task_order, workspace_column_id, task_id],
       };
 
@@ -247,7 +247,7 @@ export class PostgreSQLTaskRepository implements TaskRepository {
             where t.workspace_column_id = wc.id
             and wc.workspace_id = $5
             and t.id = $6
-            returning t.id`,
+            returning t.id::text as id`,
       values: [
         payload.title,
         payload.description ?? null,
@@ -284,12 +284,12 @@ export class PostgreSQLTaskRepository implements TaskRepository {
             where t.workspace_column_id = wc.id
             and wc.workspace_id = $1
             and t.id = $2
-            returning t.workspace_column_id as "workspaceColumnId", t.task_order as "taskOrder"`,
+            returning t.workspace_column_id::text as "workspaceColumnId", t.task_order as "taskOrder"`,
         values: [workspace_id, task_id],
       };
 
       const removedTask = (
-        await client.query<{ workspaceColumnId: number; taskOrder: number }>(
+        await client.query<{ workspaceColumnId: string; taskOrder: number }>(
           sql,
         )
       ).rows[0];
@@ -324,9 +324,9 @@ export class PostgreSQLTaskRepository implements TaskRepository {
     workspace_id: string,
     task_id: string,
     prev_task_order: number,
-    prev_workspace_column_id: number,
+    prev_workspace_column_id: string,
     new_task_order: number,
-    new_workspace_column_id: number,
+    new_workspace_column_id: string,
   ) {
     const client = await this.pool.connect();
     try {
@@ -340,7 +340,7 @@ export class PostgreSQLTaskRepository implements TaskRepository {
             and wc.id = $3
             and wc.workspace_id = $4
             and t.id = $5
-            returning t.id`,
+            returning t.id::text as id`,
         values: [
           new_workspace_column_id,
           new_task_order,
@@ -370,7 +370,7 @@ export class PostgreSQLTaskRepository implements TaskRepository {
       await client.query(sqlReindexNewColumnTasks);
       // Change the task workspace_column_id and task_order to the new values after reindexing to prevent conflicts.
       const updatedTask = (
-        await client.query<{ taskOrder: number }>(sqlUpdateTask)
+        await client.query<{ id: string }>(sqlUpdateTask)
       ).rows[0];
       if (!updatedTask) {
         throw new NotFoundError(

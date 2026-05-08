@@ -28,7 +28,7 @@ export interface WorkspaceColumnRepository {
    */
   checkWorkspaceColumnExistance(
     workspace_id: string,
-    workspace_column_id: number,
+    workspace_column_id: string,
   ): Promise<boolean>;
   /**
    * Creates a workspace column.
@@ -97,7 +97,7 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
 
   async findWorkspaceColumns(workspace_id: string) {
     const sql: QueryConfig = {
-      text: `select id, title, workspace_column_order as "workspaceColumnOrder"
+      text: `select id::text as id, title, workspace_column_order as "workspaceColumnOrder"
             from workspace_column
             where workspace_id = $1
             order by workspace_column_order`,
@@ -113,7 +113,7 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
 
   async checkWorkspaceColumnExistance(
     workspace_id: string,
-    workspace_column_id: number,
+    workspace_column_id: string,
   ) {
     const sql: QueryConfig = {
       text: `select 1 from workspace_column
@@ -135,7 +135,7 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
     const sql: QueryConfig = {
       text: `insert into workspace_column (workspace_id, title, workspace_column_order)
             values ($1, $2, $3)
-            returning id, title, workspace_column_order as "workspaceColumnOrder"`,
+            returning id::text as id, title, workspace_column_order as "workspaceColumnOrder"`,
       values: [workspace_id, payload.title, payload.workspaceColumnOrder],
     };
     try {
@@ -209,7 +209,7 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
       text: `update workspace_column
             set title = $1
             where workspace_id = $2 and id = $3
-            returning id`,
+            returning id::text as id`,
       values: [payload.title, workspace_id, workspace_column_id],
     };
     try {
@@ -250,7 +250,7 @@ export class PostgreSQLWorkspaceColumnRepository implements WorkspaceColumnRepos
         text: `update workspace_column
             set workspace_column_order = $1
             where workspace_id = $2 and id = $3
-            returning id`,
+            returning id::text as id`,
         values: [new_column_order, workspace_id, workspace_column_id],
       };
 

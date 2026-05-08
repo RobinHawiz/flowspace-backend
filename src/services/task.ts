@@ -21,14 +21,14 @@ export interface TaskService {
    * Retrieves the tasks of a workspace. Only users with access to the workspace can perform this action.
    */
   getWorkspaceTasks(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
   ): Promise<Array<TaskResponse>>;
   /**
    * Creates a task. Only users with access to the workspace can perform this action.
    */
   createTask(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     payload: TaskCreation,
   ): Promise<TaskResponse>;
@@ -36,7 +36,7 @@ export interface TaskService {
    * Updates the order of a task within a workspace column. Only users with access to the workspace can perform this action.
    */
   updateTaskOrder(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
     payload: TaskOrderUpdate,
@@ -45,7 +45,7 @@ export interface TaskService {
    * Updates a task. Only users with access to the workspace can perform this action.
    */
   updateTask(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
     payload: TaskUpdate,
@@ -54,7 +54,7 @@ export interface TaskService {
    * Deletes a task. Only users with access to the workspace can perform this action.
    */
   deleteTask(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
   ): Promise<void>;
@@ -62,7 +62,7 @@ export interface TaskService {
    * Moves a task to a different workspace column. Only users with access to the workspace can perform this action.
    */
   moveTaskToDifferentColumn(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
     payload: TaskMoveUpdate,
@@ -76,7 +76,7 @@ export class DefaultTaskService implements TaskService {
     private readonly taskRepo: TaskRepository,
   ) {}
 
-  async getWorkspaceTasks(app_user_id: number, workspace_id: string) {
+  async getWorkspaceTasks(app_user_id: string, workspace_id: string) {
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -97,7 +97,7 @@ export class DefaultTaskService implements TaskService {
   }
 
   async createTask(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     payload: TaskCreation,
   ) {
@@ -132,12 +132,12 @@ export class DefaultTaskService implements TaskService {
   }
 
   async updateTaskOrder(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
     payload: TaskOrderUpdate,
   ) {
-    const workspace_column_id = payload.workspaceColumnId.toString();
+    const workspace_column_id = payload.workspaceColumnId;
 
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
@@ -196,7 +196,7 @@ export class DefaultTaskService implements TaskService {
   }
 
   async updateTask(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
     payload: TaskUpdate,
@@ -220,7 +220,7 @@ export class DefaultTaskService implements TaskService {
     await this.taskRepo.updateTask(workspace_id, task_id, payload);
   }
 
-  async deleteTask(app_user_id: number, workspace_id: string, task_id: string) {
+  async deleteTask(app_user_id: string, workspace_id: string, task_id: string) {
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -241,7 +241,7 @@ export class DefaultTaskService implements TaskService {
   }
 
   async moveTaskToDifferentColumn(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     task_id: string,
     payload: TaskMoveUpdate,
@@ -291,7 +291,7 @@ export class DefaultTaskService implements TaskService {
     }
 
     const currentTaskOrder = await this.taskRepo.findTaskOrder(
-      payload.workspaceColumnId.toString(),
+      payload.workspaceColumnId,
       task_id,
     );
     if (currentTaskOrder === null) {
@@ -301,7 +301,7 @@ export class DefaultTaskService implements TaskService {
     }
 
     const largestTaskOrder = await this.taskRepo.findLargestTaskOrder(
-      payload.newWorkspaceColumnId.toString(),
+      payload.newWorkspaceColumnId,
     );
     const newTaskOrder = payload.newTaskOrder;
     if (largestTaskOrder === null && newTaskOrder > 0) {

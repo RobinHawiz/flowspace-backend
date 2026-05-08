@@ -15,7 +15,7 @@ export interface WorkspaceRepository {
    *
    * @throws InternalServerError If there is an error during database retrieval.
    */
-  findWorkspaces(id: number): Promise<Array<WorkspaceResponse>>;
+  findWorkspaces(id: string): Promise<Array<WorkspaceResponse>>;
   /**
    * Checks if a workspace with the given ID exists.
    *
@@ -28,7 +28,7 @@ export interface WorkspaceRepository {
    * @throws InternalServerError If there is an error during database retrieval.
    */
   findCurrentAppUserWorkspace(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
   ): Promise<WorkspaceResponse | undefined>;
   /**
@@ -37,7 +37,7 @@ export interface WorkspaceRepository {
    * @throws InternalServerError If there is an error during database operation.
    */
   createWorkspace(
-    app_user_id: number,
+    app_user_id: string,
     payload: WorkspaceCreation,
   ): Promise<WorkspaceResponse>;
   /**
@@ -84,9 +84,9 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     private readonly logger: FastifyBaseLogger,
   ) {}
 
-  async findWorkspaces(app_user_id: number) {
+  async findWorkspaces(app_user_id: string) {
     const sql: QueryConfig = {
-      text: `select w.id, w.title, awu.role
+      text: `select w.id::text as id, w.title, awu.role
             from workspace w
             inner join assigned_workspace_user awu on awu.workspace_id = w.id
             where awu.app_user_id = $1`,
@@ -113,9 +113,9 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     }
   }
 
-  async findCurrentAppUserWorkspace(app_user_id: number, workspace_id: string) {
+  async findCurrentAppUserWorkspace(app_user_id: string, workspace_id: string) {
     const sql: QueryConfig = {
-      text: `select w.id, w.title, awu.role
+      text: `select w.id::text as id, w.title, awu.role
             from workspace w
             inner join assigned_workspace_user awu on awu.workspace_id = w.id
             where w.id = $1 and awu.app_user_id = $2`,
@@ -129,25 +129,24 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
     }
   }
 
-  async createWorkspace(app_user_id: number, payload: WorkspaceCreation) {
+  async createWorkspace(app_user_id: string, payload: WorkspaceCreation) {
     const client = await this.pool.connect();
     await client.query("BEGIN");
     const sqlCreateWorkspace: QueryConfig = {
       text: `insert into workspace (title)
             values ($1::text)
-            returning id, title`,
+            returning id::text as id, title`,
       values: [payload.title],
-    };
-    const sqlAssignWorkspace: QueryConfig = {
-      text: `insert into assigned_workspace_user (workspace_id, app_user_id, role)
-            values ($1, $2, 'admin')`,
-      values: [0, app_user_id],
     };
     try {
       const workspace = (
         await client.query<WorkspaceEntity>(sqlCreateWorkspace)
       ).rows[0];
-      sqlAssignWorkspace.values![0] = workspace.id;
+      const sqlAssignWorkspace: QueryConfig = {
+        text: `insert into assigned_workspace_user (workspace_id, app_user_id, role)
+            values ($1, $2, 'admin')`,
+        values: [workspace.id, app_user_id],
+      };
       await client.query(sqlAssignWorkspace);
       await client.query("COMMIT");
       const output: WorkspaceResponse = {
@@ -192,7 +191,7 @@ export class PostgreSQLWorkspaceRepository implements WorkspaceRepository {
 
   async getWorkspaceMembers(workspace_id: string) {
     const sql: QueryConfig = {
-      text: `select au.id, au.first_name as "firstName", au.last_name as "lastName", au.email, awu.role
+      text: `select au.id::text as id, au.first_name as "firstName", au.last_name as "lastName", au.email, awu.role
             from app_user au
             inner join assigned_workspace_user awu on awu.app_user_id = au.id
             where awu.workspace_id = $1`,

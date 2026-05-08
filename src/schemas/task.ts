@@ -10,7 +10,7 @@ import {
  * Validation schema for task creation.
  *
  * Validates the request body to ensure required fields are present and formatted correctly:
- * - `workspaceColumnId`: integer.
+ * - `workspaceColumnId`: numeric string.
  * - `title`: non-empty string, max 200 characters.
  * - `description`: string or null.
  * - `priority`: one of low, medium, high.
@@ -20,7 +20,7 @@ import {
 export const taskCreationSchema: JSONSchemaType<TaskCreation> = {
   type: "object",
   properties: {
-    workspaceColumnId: { type: "integer" },
+    workspaceColumnId: { type: "string", pattern: "^[0-9]+$" },
     title: { type: "string", maxLength: 200, minLength: 1 },
     description: { type: "string", nullable: true },
     priority: { type: "string", enum: ["low", "medium", "high"] },
@@ -39,13 +39,13 @@ export const taskCreationSchema: JSONSchemaType<TaskCreation> = {
  * Validation schema for task order updates.
  *
  * Validates the request body to ensure required fields are present and formatted correctly:
- * - `workspaceColumnId`: integer.
+ * - `workspaceColumnId`: numeric string.
  * - `taskOrder`: non-negative integer.
  */
 export const taskOrderUpdateSchema: JSONSchemaType<TaskOrderUpdate> = {
   type: "object",
   properties: {
-    workspaceColumnId: { type: "integer" },
+    workspaceColumnId: { type: "string", pattern: "^[0-9]+$" },
     taskOrder: { type: "integer", minimum: 0 },
   },
   required: ["workspaceColumnId", "taskOrder"],
@@ -80,8 +80,8 @@ export const taskUpdateSchema: JSONSchemaType<TaskUpdate> = {
 export const taskMoveUpdateSchema: JSONSchemaType<TaskMoveUpdate> = {
   type: "object",
   properties: {
-    workspaceColumnId: { type: "integer" },
-    newWorkspaceColumnId: { type: "integer" },
+    workspaceColumnId: { type: "string", pattern: "^[0-9]+$" },
+    newWorkspaceColumnId: { type: "string", pattern: "^[0-9]+$" },
     newTaskOrder: { type: "integer", minimum: 0 },
   },
   required: ["workspaceColumnId", "newWorkspaceColumnId", "newTaskOrder"],

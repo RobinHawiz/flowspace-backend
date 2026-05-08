@@ -1,7 +1,7 @@
-// Full workspace column entry stored in the database.
+// Full workspace column entry used by the application.
 export type WorkspaceColumnEntity = {
-  id: number;
-  workspaceId: number;
+  id: string;
+  workspaceId: string;
   title: string;
   workspaceColumnOrder: number;
 };

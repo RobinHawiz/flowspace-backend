@@ -1,6 +1,6 @@
-// Full app user entry stored in the database.
+// Full app user entry used by the application.
 export type AppUserEntity = {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;

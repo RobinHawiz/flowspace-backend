@@ -7,11 +7,11 @@ export interface ServerToClientEvents {
     clientRequestId: string,
   ) => void;
   "workspace:updated": (
-    workspaceId: number,
+    workspaceId: string,
     workspaceTitle: string,
     clientRequestId: string,
   ) => void;
-  "workspace:deleted": (workspaceId: number, clientRequestId: string) => void;
+  "workspace:deleted": (workspaceId: string, clientRequestId: string) => void;
   "workspace:join_error": (error: AppError) => void;
 }
 
@@ -22,5 +22,5 @@ export interface ClientToServerEvents {
 export interface InterServerEvents {}
 
 export interface SocketData {
-  userId: number;
+  userId: string;
 }

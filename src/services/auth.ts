@@ -25,7 +25,7 @@ export interface AuthService {
    *
    * @throws NotFoundError if the user is not found.
    */
-  getAppUser(id: number): Promise<AppUserResponse>;
+  getAppUser(id: string): Promise<AppUserResponse>;
   /**
    * Attempts to register a new app user.
    */
@@ -61,7 +61,7 @@ export class DefaultAuthService implements AuthService {
     return token;
   }
 
-  async getAppUser(id: number) {
+  async getAppUser(id: string) {
     const appUser = await this.appUserRepo.findOneAppUser(id);
     if (!appUser) {
       throw new NotFoundError(`App user not found`);

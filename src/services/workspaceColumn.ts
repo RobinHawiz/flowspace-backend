@@ -19,14 +19,14 @@ export interface WorkspaceColumnService {
    * Retrieves the columns of a workspace. Only users with access to the workspace can perform this action.
    */
   getWorkspaceColumns(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
   ): Promise<Array<WorkspaceColumnResponse>>;
   /**
    * Creates a workspace column. Only users with access to the workspace can perform this action.
    */
   createWorkspaceColumn(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     payload: WorkspaceColumnCreation,
   ): Promise<WorkspaceColumnResponse>;
@@ -34,7 +34,7 @@ export interface WorkspaceColumnService {
    * Updates the title of a workspace column. Only users with access to the workspace can perform this action.
    */
   updateWorkspaceColumnTitle(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     workspace_column_id: string,
     payload: WorkspaceColumnTitleUpdate,
@@ -43,7 +43,7 @@ export interface WorkspaceColumnService {
    * Updates the order of a workspace column. Only users with access to the workspace can perform this action.
    */
   updateWorkspaceColumnOrder(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     workspace_column_id: string,
     payload: WorkspaceColumnOrderUpdate,
@@ -52,7 +52,7 @@ export interface WorkspaceColumnService {
    * Deletes a workspace column. Only users with access to the workspace can perform this action.
    */
   deleteWorkspaceColumn(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     workspace_column_id: string,
   ): Promise<void>;
@@ -64,7 +64,7 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
     private readonly workspaceColumnRepo: WorkspaceColumnRepository,
   ) {}
 
-  async getWorkspaceColumns(app_user_id: number, workspace_id: string) {
+  async getWorkspaceColumns(app_user_id: string, workspace_id: string) {
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -85,7 +85,7 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
   }
 
   async createWorkspaceColumn(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     payload: WorkspaceColumnCreation,
   ) {
@@ -112,7 +112,7 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
   }
 
   async deleteWorkspaceColumn(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     workspace_column_id: string,
   ) {
@@ -139,7 +139,7 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
   }
 
   async updateWorkspaceColumnTitle(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     workspace_column_id: string,
     payload: WorkspaceColumnTitleUpdate,
@@ -173,7 +173,7 @@ export class DefaultWorkspaceColumnService implements WorkspaceColumnService {
   }
 
   async updateWorkspaceColumnOrder(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     workspace_column_id: string,
     payload: WorkspaceColumnOrderUpdate,

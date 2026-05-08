@@ -19,7 +19,7 @@ export interface AppUserRepository {
    *
    * @throws InternalServerError If there is an error during database retrieval.
    */
-  findOneAppUser(id: number): Promise<AppUserResponse | undefined>;
+  findOneAppUser(id: string): Promise<AppUserResponse | undefined>;
   /**
    * Inserts a user and returns the inserted user.
    *
@@ -37,7 +37,7 @@ export class PostgreSQLAppUserRepository implements AppUserRepository {
 
   async findByEmail(email: string) {
     const sql: QueryConfig = {
-      text: `select id, first_name as "firstName", last_name as "lastName", email, password_hash as "passwordHash" from app_user where email = $1::text`,
+      text: `select id::text as id, first_name as "firstName", last_name as "lastName", email, password_hash as "passwordHash" from app_user where email = $1::text`,
       values: [email],
     };
 
@@ -49,9 +49,9 @@ export class PostgreSQLAppUserRepository implements AppUserRepository {
     }
   }
 
-  async findOneAppUser(id: number) {
+  async findOneAppUser(id: string) {
     const sql: QueryConfig = {
-      text: `select id, first_name as "firstName", last_name as "lastName", email
+      text: `select id::text as id, first_name as "firstName", last_name as "lastName", email
       from app_user
       where id = $1`,
       values: [id],
@@ -68,7 +68,7 @@ export class PostgreSQLAppUserRepository implements AppUserRepository {
     const sql: QueryConfig = {
       text: `insert into app_user (first_name, last_name, email, password_hash)
       values($1::text, $2::text, $3::text, $4::text)
-      returning first_name as "firstName", last_name as "lastName", email`,
+      returning id::text as id, first_name as "firstName", last_name as "lastName", email`,
       values: [
         newUser.firstName,
         newUser.lastName,

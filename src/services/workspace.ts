@@ -10,12 +10,12 @@ export interface WorkspaceService {
   /**
    * Retrieves the workspaces for the current app user.
    */
-  getWorkspaces(app_user_id: number): Promise<Array<WorkspaceResponse>>;
+  getWorkspaces(app_user_id: string): Promise<Array<WorkspaceResponse>>;
   /**
    * Retrieves a specific workspace for the current app user.
    */
   getWorkspace(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
   ): Promise<WorkspaceResponse>;
 
@@ -23,7 +23,7 @@ export interface WorkspaceService {
    * Creates a workspace and assigns the current app user to it with an admin role.
    */
   createWorkspace(
-    app_user_id: number,
+    app_user_id: string,
     payload: WorkspaceCreation,
   ): Promise<WorkspaceResponse>;
 
@@ -31,7 +31,7 @@ export interface WorkspaceService {
    * Updates the title of a workspace. Only users with an admin role in the workspace can perform this action.
    */
   updateWorkspaceTitle(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     title: string,
   ): Promise<void>;
@@ -39,13 +39,13 @@ export interface WorkspaceService {
   /**
    * Deletes a workspace. Only users with an admin role in the workspace can perform this action.
    */
-  deleteWorkspace(app_user_id: number, workspace_id: string): Promise<void>;
+  deleteWorkspace(app_user_id: string, workspace_id: string): Promise<void>;
 
   /**
    * Retrieves the members of a workspace. Only users with access to the workspace can perform this action.
    */
   getWorkspaceMembers(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
   ): Promise<Array<WorkspaceMemberResponse>>;
 
@@ -53,7 +53,7 @@ export interface WorkspaceService {
    * Adds a member to a workspace. Only users with an admin role in the workspace can perform this action.
    */
   addWorkspaceMember(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     email: string,
   ): Promise<WorkspaceMemberResponse>;
@@ -61,7 +61,7 @@ export interface WorkspaceService {
    * Removes a member from a workspace. Only users with an admin role in the workspace can perform this action.
    */
   removeWorkspaceMember(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     member_id: string,
   ): Promise<void>;
@@ -73,11 +73,11 @@ export class DefaultWorkspaceService implements WorkspaceService {
     private readonly workspaceRepo: WorkspaceRepository,
   ) {}
 
-  async getWorkspaces(app_user_id: number) {
+  async getWorkspaces(app_user_id: string) {
     return await this.workspaceRepo.findWorkspaces(app_user_id);
   }
 
-  async getWorkspace(app_user_id: number, workspace_id: string) {
+  async getWorkspace(app_user_id: string, workspace_id: string) {
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -96,11 +96,11 @@ export class DefaultWorkspaceService implements WorkspaceService {
     return result;
   }
 
-  async createWorkspace(app_user_id: number, payload: WorkspaceCreation) {
+  async createWorkspace(app_user_id: string, payload: WorkspaceCreation) {
     return await this.workspaceRepo.createWorkspace(app_user_id, payload);
   }
 
-  async getWorkspaceMembers(app_user_id: number, workspace_id: string) {
+  async getWorkspaceMembers(app_user_id: string, workspace_id: string) {
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -121,7 +121,7 @@ export class DefaultWorkspaceService implements WorkspaceService {
   }
 
   async updateWorkspaceTitle(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     title: string,
   ) {
@@ -148,7 +148,7 @@ export class DefaultWorkspaceService implements WorkspaceService {
     return await this.workspaceRepo.updateWorkspaceTitle(workspace_id, title);
   }
 
-  async deleteWorkspace(app_user_id: number, workspace_id: string) {
+  async deleteWorkspace(app_user_id: string, workspace_id: string) {
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -173,7 +173,7 @@ export class DefaultWorkspaceService implements WorkspaceService {
   }
 
   async addWorkspaceMember(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     email: string,
   ) {
@@ -208,11 +208,11 @@ export class DefaultWorkspaceService implements WorkspaceService {
   }
 
   async removeWorkspaceMember(
-    app_user_id: number,
+    app_user_id: string,
     workspace_id: string,
     member_id: string,
   ) {
-    const isRemovingSelf = app_user_id.toString() === member_id;
+    const isRemovingSelf = app_user_id === member_id;
     const workspaceExists =
       await this.workspaceRepo.checkWorkspaceExistance(workspace_id);
     if (!workspaceExists) {
@@ -242,7 +242,7 @@ export class DefaultWorkspaceService implements WorkspaceService {
     }
 
     const resultMember = await this.workspaceRepo.findCurrentAppUserWorkspace(
-      parseInt(member_id),
+      member_id,
       workspace_id,
     );
     if (!resultMember) {
