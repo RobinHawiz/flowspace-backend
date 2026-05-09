@@ -5,9 +5,19 @@ import {
   InterServerEvents,
   SocketData,
 } from "@customTypes/socket.io.js";
-import { WorkspaceResponse } from "@models/workspace.js";
+import {
+  WorkspaceMemberResponse,
+  WorkspaceResponse,
+} from "@models/workspace.js";
 
 export interface Publisher {
+  emitAddMemberWorkspace(
+    workspace: WorkspaceResponse,
+    addedMember: WorkspaceMemberResponse,
+    callerAppUserId: string,
+    clientRequestId: string,
+  ): void;
+
   emitCreateWorkspace(
     appUserId: string,
     workspace: WorkspaceResponse,
@@ -37,6 +47,29 @@ export default class DefaultPublisher implements Publisher {
       SocketData
     >,
   ) {}
+
+  emitAddMemberWorkspace(
+    workspace: WorkspaceResponse,
+    addedMember: WorkspaceMemberResponse,
+    callerAppUserId: string,
+    clientRequestId: string,
+  ) {
+    // Notify the added member about being added to the workspace.
+    this.io
+      .to(`user:${addedMember.id}`)
+      .emit("workspace:membershipAdded", workspace);
+
+    // Notify existing workspace members about the new member.
+    this.io
+      .to(`user:${callerAppUserId}`)
+      .to(`workspace:${workspace.id}`)
+      .emit(
+        "workspace:memberAdded",
+        workspace.id,
+        addedMember,
+        clientRequestId,
+      );
+  }
 
   emitCreateWorkspace(
     appUserId: string,

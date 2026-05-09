@@ -56,7 +56,10 @@ export interface WorkspaceService {
     app_user_id: string,
     workspace_id: string,
     email: string,
-  ): Promise<WorkspaceMemberResponse>;
+  ): Promise<{
+    addedMember: WorkspaceMemberResponse;
+    addedMemberWorkspaceResponse: WorkspaceResponse;
+  }>;
   /**
    * Removes a member from a workspace. Only users with an admin role in the workspace can perform this action.
    */
@@ -204,7 +207,17 @@ export class DefaultWorkspaceService implements WorkspaceService {
       );
     }
 
-    return await this.workspaceRepo.addWorkspaceMember(workspace_id, appUser);
+    const addedMember = await this.workspaceRepo.addWorkspaceMember(
+      workspace_id,
+      appUser,
+    );
+
+    const addedMemberWorkspaceResponse: WorkspaceResponse = {
+      ...result,
+      role: addedMember.role,
+    };
+
+    return { addedMember, addedMemberWorkspaceResponse };
   }
 
   async removeWorkspaceMember(

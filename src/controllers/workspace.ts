@@ -155,16 +155,27 @@ export class DefaultWorkspaceController implements WorkspaceController {
     request: FastifyRequest<{
       Params: { workspaceId: string };
       Body: { email: string };
+      Headers: { "x-client-request-id": string };
     }>,
     reply: FastifyReply,
   ) {
-    const appUser = await this.workspaceService.addWorkspaceMember(
-      request.user.id,
-      request.params.workspaceId,
-      request.body.email,
-    );
+    const { addedMember, addedMemberWorkspaceResponse } =
+      await this.workspaceService.addWorkspaceMember(
+        request.user.id,
+        request.params.workspaceId,
+        request.body.email,
+      );
+    reply.code(201).send(addedMember);
 
-    reply.code(201).send(appUser);
+    const clientRequestId = request.headers["x-client-request-id"];
+    if (clientRequestId) {
+      this.publisher.emitAddMemberWorkspace(
+        addedMemberWorkspaceResponse,
+        addedMember,
+        request.user.id,
+        clientRequestId,
+      );
+    }
   }
 
   async removeWorkspaceMember(

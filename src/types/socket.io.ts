@@ -1,5 +1,8 @@
 import { AppError } from "@errors/appError.js";
-import { WorkspaceResponse } from "@models/workspace.js";
+import {
+  WorkspaceMemberResponse,
+  WorkspaceResponse,
+} from "@models/workspace.js";
 
 export interface ServerToClientEvents {
   "workspace:created": (
@@ -12,6 +15,12 @@ export interface ServerToClientEvents {
     clientRequestId: string,
   ) => void;
   "workspace:deleted": (workspaceId: string, clientRequestId: string) => void;
+  "workspace:membershipAdded": (workspace: WorkspaceResponse) => void;
+  "workspace:memberAdded": (
+    workspaceId: string,
+    addedMember: WorkspaceMemberResponse,
+    clientRequestId: string,
+  ) => void;
   "workspace:join_error": (error: AppError) => void;
 }
 
