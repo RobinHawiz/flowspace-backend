@@ -18,6 +18,13 @@ export interface Publisher {
     clientRequestId: string,
   ): void;
 
+  emitRemoveMemberWorkspace(
+    workspaceId: string,
+    removedMemberId: string,
+    callerAppUserId: string,
+    clientRequestId: string,
+  ): void;
+
   emitCreateWorkspace(
     appUserId: string,
     workspace: WorkspaceResponse,
@@ -67,6 +74,34 @@ export default class DefaultPublisher implements Publisher {
         "workspace:memberAdded",
         workspace.id,
         addedMember,
+        clientRequestId,
+      );
+  }
+
+  emitRemoveMemberWorkspace(
+    workspaceId: string,
+    removedMemberId: string,
+    callerAppUserId: string,
+    clientRequestId: string,
+  ) {
+    // Notify the removed member about being removed from the workspace.
+    this.io
+      .to(`user:${removedMemberId}`)
+      .emit("workspace:membershipRemoved", workspaceId);
+
+    // Remove the removed member from the workspace room so they no longer receive workspace events.
+    this.io
+      .in(`user:${removedMemberId}`)
+      .socketsLeave(`workspace:${workspaceId}`);
+
+    // Notify existing workspace members about the removed member.
+    this.io
+      .to(`user:${callerAppUserId}`)
+      .to(`workspace:${workspaceId}`)
+      .emit(
+        "workspace:memberRemoved",
+        workspaceId,
+        removedMemberId,
         clientRequestId,
       );
   }

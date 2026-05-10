@@ -21,6 +21,12 @@ export interface ServerToClientEvents {
     addedMember: WorkspaceMemberResponse,
     clientRequestId: string,
   ) => void;
+  "workspace:membershipRemoved": (workspaceId: string) => void;
+  "workspace:memberRemoved": (
+    workspaceId: string,
+    removedMemberId: string,
+    clientRequestId: string,
+  ) => void;
   "workspace:join_error": (error: AppError) => void;
 }
 

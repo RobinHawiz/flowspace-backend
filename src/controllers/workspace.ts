@@ -181,6 +181,7 @@ export class DefaultWorkspaceController implements WorkspaceController {
   async removeWorkspaceMember(
     request: FastifyRequest<{
       Params: { workspaceId: string; appUserId: string };
+      Headers: { "x-client-request-id": string };
     }>,
     reply: FastifyReply,
   ) {
@@ -189,7 +190,16 @@ export class DefaultWorkspaceController implements WorkspaceController {
       request.params.workspaceId,
       request.params.appUserId,
     );
-
     reply.code(204).send();
+
+    const clientRequestId = request.headers["x-client-request-id"];
+    if (clientRequestId) {
+      this.publisher.emitRemoveMemberWorkspace(
+        request.params.workspaceId,
+        request.params.appUserId,
+        request.user.id,
+        clientRequestId,
+      );
+    }
   }
 }
