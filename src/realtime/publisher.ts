@@ -137,5 +137,9 @@ export default class DefaultPublisher implements Publisher {
       .to(`workspace:${workspaceId}`)
       .to(`user:${appUserId}`)
       .emit("workspace:deleted", workspaceId, clientRequestId);
+
+    this.io
+      .in(`workspace:${workspaceId}`)
+      .socketsLeave(`workspace:${workspaceId}`);
   }
 }
