@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check-env": "tsx getenv.ts",
+    "check-env": "node getenv.js",
     "predev": "npm run check-env",
     "dev": "tsx watch src/server.ts",
     "prebuild": "npm run check-env",
