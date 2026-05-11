@@ -9,7 +9,6 @@
     "prebuild": "npm run check-env",
     "build": "tsc",
     "postbuild": "tsc-alias",
-    "prestart": "npm run check-env",
     "start": "node dist/server.js",
     "gen-secret-key": "tsx generateSecretKey.ts",
     "install-db": "tsx installDb.ts"
