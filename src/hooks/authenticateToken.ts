@@ -52,3 +52,29 @@ export default async function authenticateToken(
     }
   }
 }
+
+/**
+ * Attempts to decode the auth cookie and attach `request.user` for logout.
+ *
+ * Logout should still succeed when the token is missing, expired, or invalid,
+ * so this hook falls back to an empty user id instead of throwing.
+ */
+export async function attachOptionalUserForLogout(
+  request: FastifyRequest,
+  _: FastifyReply,
+) {
+  const token = request.cookies.token;
+  if (!token) {
+    request.user = { id: "" };
+    return;
+  }
+  try {
+    const key = process.env.JWT_SECRET_KEY!;
+    const decoded = jwt.verify(token, key);
+    if (isAuthTokenPayload(decoded)) {
+      request.user = decoded;
+    }
+  } catch {
+    request.user = { id: "" };
+  }
+}

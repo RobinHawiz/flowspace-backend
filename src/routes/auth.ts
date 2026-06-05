@@ -5,7 +5,9 @@ import {
   appUserRegistrationSchema,
 } from "@schemas/appUser.js";
 import { AppUserCredentials, AppUserRegistration } from "@models/appUser.js";
-import authenticateToken from "@hooks/authenticateToken.js";
+import authenticateToken, {
+  attachOptionalUserForLogout,
+} from "@hooks/authenticateToken.js";
 
 export interface AuthRoutes {
   initRoutes(app: FastifyInstance): void;
@@ -40,9 +42,15 @@ export class DefaultAuthRoutes implements AuthRoutes {
     );
 
     // Logs out the current app user by clearing the token cookie.
-    app.post("/api/auth/logout", async (request, reply) => {
-      await this.authController.logoutAppUser(request, reply);
-    });
+    app.post(
+      "/api/auth/logout",
+      {
+        onRequest: attachOptionalUserForLogout,
+      },
+      async (request, reply) => {
+        await this.authController.logoutAppUser(request, reply);
+      },
+    );
 
     // Creates an app user after validating the request body.
     app.post<{ Body: AppUserRegistration }>(

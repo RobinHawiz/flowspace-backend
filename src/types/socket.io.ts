@@ -5,6 +5,7 @@ import {
 } from "@models/workspace.js";
 
 export interface ServerToClientEvents {
+  "appUser:logOut": (clientRequestId: string) => void;
   "workspace:created": (
     workspace: WorkspaceResponse,
     clientRequestId: string,

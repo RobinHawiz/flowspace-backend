@@ -11,6 +11,8 @@ import {
 } from "@models/workspace.js";
 
 export interface Publisher {
+  emitLogOut(appUserId: string, clientRequestId: string): void;
+
   emitAddMemberWorkspace(
     workspace: WorkspaceResponse,
     addedMember: WorkspaceMemberResponse,
@@ -54,6 +56,10 @@ export default class DefaultPublisher implements Publisher {
       SocketData
     >,
   ) {}
+
+  emitLogOut(appUserId: string, clientRequestId: string) {
+    this.io.to(`user:${appUserId}`).emit("appUser:logOut", clientRequestId);
+  }
 
   emitAddMemberWorkspace(
     workspace: WorkspaceResponse,
